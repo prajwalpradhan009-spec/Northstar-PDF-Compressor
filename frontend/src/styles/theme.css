@@ -1,0 +1,562 @@
+/* ==========================================================================
+   NORTHSTAR — CORE THEME
+   Tokens, resets, and the reusable glass primitives.
+   Every section of the app is built from these classes.
+   ========================================================================== */
+
+:root {
+  /* --- Base surfaces ------------------------------------------------- */
+  --bg-0: #05060f;
+  --bg-1: #080a18;
+  --bg-2: #0c0f22;
+
+  /* --- Accents ------------------------------------------------------- */
+  --blue: #38bdf8;
+  --cyan: #22d3ee;
+  --purple: #a855f7;
+  --violet: #818cf8;
+  --green: #34d399;
+  --red: #fb7185;
+  --amber: #fbbf24;
+
+  /* --- Text ---------------------------------------------------------- */
+  --text: #eef2ff;
+  --text-soft: #b6c0dd;
+  --text-dim: #8b95b5;
+  --text-faint: #667090;
+
+  /* --- Glass --------------------------------------------------------- */
+  --glass-bg: rgba(255, 255, 255, 0.045);
+  --glass-bg-strong: rgba(255, 255, 255, 0.075);
+  --glass-border: rgba(255, 255, 255, 0.11);
+  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  --glass-blur: 22px;
+  --glass-blur-lg: 34px;
+  --glass-saturate: 145%;
+
+  /* --- Gradients / glow ---------------------------------------------- */
+  --grad-primary: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+  --grad-cyan: linear-gradient(135deg, #22d3ee 0%, #38bdf8 100%);
+  --grad-success: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
+  --grad-danger: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+  --glow-blue: 0 0 0 1px rgba(56, 189, 248, 0.28), 0 8px 40px -8px rgba(56, 189, 248, 0.45);
+  --glow-cyan: 0 0 0 1px rgba(34, 211, 238, 0.32), 0 10px 46px -8px rgba(34, 211, 238, 0.5);
+  --glow-success: 0 0 0 1px rgba(52, 211, 153, 0.35), 0 10px 44px -8px rgba(52, 211, 153, 0.45);
+  --glow-danger: 0 0 0 1px rgba(251, 113, 133, 0.35), 0 10px 44px -8px rgba(251, 113, 133, 0.45);
+
+  /* --- Shape / motion ------------------------------------------------ */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 4px 18px -6px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 18px 46px -18px rgba(0, 0, 0, 0.75);
+  --shadow-lg: 0 34px 80px -30px rgba(0, 0, 0, 0.85);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 160ms;
+  --t-base: 260ms;
+  --t-slow: 520ms;
+
+  /* Layout */
+  --nav-h: 68px;
+  --page-max: 1240px;
+  --gap: 20px;
+}
+
+/* ==========================================================================
+   RESET
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal scroll on every breakpoint, including 375px. */
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+/* The animated nebula lives behind everything. */
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.15;
+  letter-spacing: -0.032em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY — visible focus on everything interactive
+   ========================================================================== */
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* Screen-reader-only text that still receives focus when tabbed to. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -120%);
+  z-index: 2000;
+  padding: 12px 22px;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  background: rgba(10, 12, 30, 0.95);
+  border: 1px solid var(--glass-border-strong);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform var(--t-fast) var(--ease);
+}
+
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+}
+
+/* ==========================================================================
+   GLASS PRIMITIVES
+   ========================================================================== */
+
+/* .glass — the base transparent panel. */
+.glass {
+  position: relative;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* A hairline highlight along the top edge sells the "pane of glass" look. */
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), transparent 42%, transparent 62%, rgba(255, 255, 255, 0.08));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* .glass-card — a smaller, interactive unit (stats, tool tiles, file cards). */
+.glass-card {
+  position: relative;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-strong);
+  box-shadow: var(--shadow-md), 0 0 28px -10px rgba(56, 189, 248, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* .glass-panel — the large work surface (upload zones, forms, results). */
+.glass-panel {
+  position: relative;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.028));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: clamp(20px, 3.2vw, 38px);
+}
+
+/* .glass-button — filled primary action. */
+.glass-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  /* 44px minimum height keeps every action touch-friendly. */
+  min-height: 44px;
+  padding: 12px 24px;
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  color: #04060f;
+  background: var(--grad-primary);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-base) var(--ease-out),
+    filter var(--t-fast) var(--ease-out), opacity var(--t-fast) linear;
+  overflow: hidden;
+  isolation: isolate;
+  white-space: nowrap;
+}
+
+/* Sheen that sweeps across on hover. */
+.glass-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(115deg, transparent 22%, rgba(255, 255, 255, 0.55) 48%, transparent 74%);
+  transform: translateX(-130%);
+  transition: transform var(--t-slow) var(--ease-out);
+}
+
+.glass-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 42px -12px rgba(99, 102, 241, 0.9), 0 0 34px -8px rgba(56, 189, 248, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.glass-button:hover:not(:disabled)::after {
+  transform: translateX(130%);
+}
+
+.glass-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.glass-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: saturate(0.55);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary variant — glass outline, no fill. */
+.glass-button--ghost {
+  color: var(--text);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border-strong);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-button--ghost::after {
+  display: none;
+}
+
+.glass-button--ghost:hover:not(:disabled) {
+  background: var(--glass-bg-strong);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: var(--glow-blue);
+}
+
+.glass-button--danger {
+  color: #fff;
+  background: var(--grad-danger);
+  box-shadow: 0 10px 30px -12px rgba(244, 63, 94, 0.7);
+}
+
+.glass-button--success {
+  color: #04140d;
+  background: var(--grad-success);
+  box-shadow: 0 10px 30px -12px rgba(52, 211, 153, 0.7);
+}
+
+.glass-button--sm {
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+}
+
+.glass-button--lg {
+  min-height: 54px;
+  padding: 16px 34px;
+  font-size: 1.05rem;
+}
+
+.glass-button--block {
+  width: 100%;
+}
+
+/* .glass-input — labelled text field. */
+.glass-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 15px;
+  border-radius: var(--r-sm);
+  color: var(--text);
+  background: rgba(6, 8, 22, 0.5);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out),
+    background var(--t-fast) var(--ease-out);
+}
+
+.glass-input::placeholder {
+  color: var(--text-faint);
+}
+
+.glass-input:hover:not(:disabled) {
+  border-color: var(--glass-border-strong);
+}
+
+.glass-input:focus {
+  outline: none;
+  background: rgba(6, 8, 22, 0.72);
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16), 0 0 22px -6px rgba(56, 189, 248, 0.5);
+}
+
+.glass-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.glass-input[aria-invalid='true'] {
+  border-color: rgba(251, 113, 133, 0.7);
+}
+
+.glass-input[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px rgba(251, 113, 133, 0.16);
+}
+
+/* Native select needs the arrow re-drawn to be visible on dark glass. */
+select.glass-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23b6c0dd' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  cursor: pointer;
+}
+
+select.glass-input option {
+  background: #0c0f22;
+  color: var(--text);
+}
+
+/* Range input, themed to match. */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(
+    90deg,
+    var(--cyan) 0%,
+    var(--blue) 0%,
+    rgba(255, 255, 255, 0.12) var(--fill, 50%),
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  cursor: pointer;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe, #7dd3fc);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2), 0 3px 10px rgba(0, 0, 0, 0.5);
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+}
+
+input[type='range']:hover::-webkit-slider-thumb {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 7px rgba(56, 189, 248, 0.24), 0 3px 12px rgba(0, 0, 0, 0.55);
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.5);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe, #7dd3fc);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+}
+
+input[type='range']:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 6px;
+}
+
+/* ==========================================================================
+   .glow / .fade-in / .slide-up  — motion utilities
+   ========================================================================== */
+
+/* .glow — soft coloured halo behind an element. */
+.glow {
+  position: relative;
+}
+
+.glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--grad-primary);
+  opacity: 0.28;
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+.glow-blue {
+  box-shadow: var(--glow-blue);
+}
+
+/* Gradient text used for headings and the wordmark. */
+.glow-text {
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* .fade-in — enters once, via IntersectionObserver adding .is-in */
+.fade-in,
+.slide-up {
+  opacity: 0;
+  transition: opacity 760ms var(--ease-out), transform 760ms var(--ease-out);
+  will-change: opacity, transform;
+}
+
+.fade-in.is-in {
+  opacity: 1;
+}
+
+.slide-up {
+  transform: translateY(26px);
+}
+
+.slide-up.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Reveal-based animations must not leave content invisible. */
+  .fade-in,
+  .slide-up {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
