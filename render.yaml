@@ -1,4 +1,4 @@
-# Render deployment blueprint for NorthStar's separate API and frontend.
+﻿# Render deployment blueprint for NorthStar's separate API and frontend.
 # Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
 # Values marked `sync: false` are requested during initial Blueprint setup.
 
@@ -15,14 +15,26 @@ services:
       - key: NODE_ENV
         value: production
 
+
+      # PORT is deliberately NOT set here. Render injects its own PORT and
+      # server.js binds to it, so hard-coding 5001 (or 5000) would break the
+      # deploy the moment the platform hands out a different port.
+
       - key: NODE_VERSION
         value: "22"
 
+      # generateValue renders a 64-character random string, which satisfies the
+      # server's 32-character minimum. Never hard-code this value.
       - key: JWT_SECRET
         generateValue: true
 
+      # MongoDB Atlas SRV string, e.g.
+      # mongodb+srv://USER:PASS@cluster0.xxxxx.mongodb.net/northstar?retryWrites=true&w=majority
+      # Paste the password URL-encoded (@ -> %40, and any # -> %23).
       - key: MONGODB_URI
         sync: false
+
+      # Exact public URL of the static frontend service.
 
       - key: FRONTEND_URL
         sync: false
@@ -68,3 +80,5 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
+
