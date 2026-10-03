@@ -1,0 +1,70 @@
+# Render deployment blueprint for NorthStar's separate API and frontend.
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+# Values marked `sync: false` are requested during initial Blueprint setup.
+
+services:
+  - type: web
+    name: northstar
+    runtime: node
+    plan: free
+    buildCommand: npm install --prefix backend
+    startCommand: npm start --prefix backend
+    healthCheckPath: /api/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: NODE_VERSION
+        value: "22"
+
+      - key: JWT_SECRET
+        generateValue: true
+
+      - key: MONGODB_URI
+        sync: false
+
+      - key: FRONTEND_URL
+        sync: false
+
+      - key: SESSION_MAX_AGE_DAYS
+        value: "7"
+
+      - key: PDF_MAX_FILES
+        value: "5"
+
+      - key: PDF_MAX_UPLOAD_MB
+        value: "10"
+
+      - key: PDF_MAX_PAGES
+        value: "1000"
+
+      - key: IMAGE_MAX_FILES
+        value: "5"
+
+      - key: IMAGE_MAX_UPLOAD_MB
+        value: "5"
+
+      - key: IMAGE_MAX_DIMENSION_PX
+        value: "8000"
+
+  - type: web
+    name: northstar-frontend
+    runtime: static
+    buildCommand: npm install --prefix frontend && npm run build --prefix frontend
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_PDF_MAX_FILES
+        value: "5"
+      - key: VITE_PDF_MAX_UPLOAD_MB
+        value: "10"
+      - key: VITE_IMAGE_MAX_FILES
+        value: "5"
+      - key: VITE_IMAGE_MAX_UPLOAD_MB
+        value: "5"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

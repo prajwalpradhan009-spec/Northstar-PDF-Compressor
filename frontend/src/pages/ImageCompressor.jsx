@@ -13,8 +13,8 @@ import {
 } from '../components/icons';
 
 /* Mirror of the server-side limits in backend/config/env.js. */
-const MAX_FILES = 20;
-const MAX_FILE_MB = 15;
+const MAX_FILES = Number(import.meta.env.VITE_IMAGE_MAX_FILES) || 20;
+const MAX_FILE_MB = Number(import.meta.env.VITE_IMAGE_MAX_UPLOAD_MB) || 15;
 const MAX_DIMENSION = 8000;
 
 const ACCEPTED_MIME = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/x-webp'];

@@ -270,13 +270,12 @@ async function run() {
     step('me', `lastLoginAt=${body.user.lastLoginAt}`);
   }
 
-  /* -- CSP --------------------------------------------------------- */
+  /* -- API CSP ----------------------------------------------------- */
   {
-    const { response } = await call('/', { expect: 200 });
+    const { response } = await call('/api/health', { expect: 200 });
     const csp = response.headers.get('content-security-policy') || '';
-    assert.match(csp, /default-src 'self'/, 'frontend CSP must allow same-origin scripts');
-    assert.match(csp, /img-src[^;]*blob:/, 'frontend CSP must allow blob: images');
-    step('CSP on HTML', "default-src 'self' + blob: images");
+    assert.match(csp, /default-src 'none'/, 'API CSP must deny active content');
+    step('API CSP', "default-src 'none'");
   }
 
   /* -- pdf inspect ------------------------------------------------- */

@@ -97,10 +97,11 @@ app.use('/api', uploadErrorHandler);
 app.get('/api/ping', (req, res) => res.json({ ok: true, time: Date.now() }));
 
 app.get('/api/health', (req, res) => {
-  res.json({
-    ok: true,
+  const database = db.status();
+  res.status(database === 'connected' ? 200 : 503).json({
+    ok: database === 'connected',
     env: config.env,
-    database: db.status(),
+    database,
     auth: config.auth.jwtSecret ? 'cookie-session' : 'unconfigured',
     limits: {
       pdf: {

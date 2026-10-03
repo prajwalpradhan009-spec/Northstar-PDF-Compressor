@@ -6,7 +6,7 @@
  * `credentials: 'include'` keeps the cookie flowing cross-origin too.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
 
 export class ApiError extends Error {
   constructor(message, { status, details } = {}) {
@@ -46,7 +46,7 @@ async function request(path, { method = 'GET', body, signal, headers } = {}) {
     });
   } catch (error) {
     if (error?.name === 'AbortError') throw error;
-    throw new ApiError('Cannot reach the server. Make sure the backend is running, then try again.');
+    throw new ApiError('Cannot reach the server. Check your connection and try again.');
   }
 
   const data = await parse(response);
@@ -96,7 +96,7 @@ export const pdf = {
       });
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
-      throw new ApiError('Cannot reach the server. Make sure the backend is running, then try again.');
+      throw new ApiError('Cannot reach the server. Check your connection and try again.');
     }
 
     if (!response.ok) {
@@ -138,7 +138,7 @@ export const images = {
       });
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
-      throw new ApiError('Cannot reach the server. Make sure the backend is running, then try again.');
+      throw new ApiError('Cannot reach the server. Check your connection and try again.');
     }
 
     if (!response.ok) {

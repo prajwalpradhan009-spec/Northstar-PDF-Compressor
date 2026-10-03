@@ -12,8 +12,8 @@ import {
 } from '../components/icons';
 
 /* Mirror of the server-side limits in backend/config/env.js. */
-const MAX_FILES = 20;
-const MAX_FILE_MB = 50;
+const MAX_FILES = Number(import.meta.env.VITE_PDF_MAX_FILES) || 20;
+const MAX_FILE_MB = Number(import.meta.env.VITE_PDF_MAX_UPLOAD_MB) || 50;
 
 function isPdf(file) {
   const type = (file.type || '').toLowerCase();
