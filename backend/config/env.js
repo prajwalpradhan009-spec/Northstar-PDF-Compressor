@@ -57,12 +57,15 @@ function readList(key) {
     .filter(Boolean);
 }
 
+const DEFAULT_MONGO_DB = 'northstar';
+
 const nodeEnv = readString('NODE_ENV', 'development');
 const isProduction = nodeEnv === 'production';
 const isTest = nodeEnv === 'test';
 
 const port = readNumber('PORT', 5000);
-const mongoUri = readString('MONGODB_URI');
+const rawMongoUri = readString('MONGODB_URI');
+const mongoUri = withDefaultMongoDatabase(rawMongoUri);
 const jwtSecret = readString('JWT_SECRET');
 const frontendUrl = readString('FRONTEND_URL').replace(/\/+$/, '');
 const allowedOrigins = readList('ALLOWED_ORIGINS');
@@ -97,6 +100,38 @@ function mongoDatabaseName(uri) {
   return name.length ? name : null;
 }
 
+/**
+ * Insert the default database name when the configured URI omits it.
+ *
+ * Atlas URIs copied from the dashboard frequently end at the host with only a
+ * query string, which makes the driver fall back to a database named "test".
+ * Repairing it here means a forgotten path segment costs accounts in a hidden
+ * database instead of taking the whole service down.
+ */
+function withDefaultMongoDatabase(uri) {
+  if (!uri || !/^mongodb(\+srv)?:\/\//.test(uri)) return uri;
+  if (mongoDatabaseName(uri)) return uri;
+
+  const scheme = uri.match(/^mongodb(\+srv)?:\/\//)[0];
+  const withoutScheme = uri.slice(scheme.length);
+  const at = withoutScheme.indexOf('@');
+
+  // A local URI may carry no credentials at all, in which case there is no "@"
+  // to split on and everything after the scheme is the host.
+  const credentials = at === -1 ? '' : withoutScheme.slice(0, at);
+  const rest = at === -1 ? withoutScheme : withoutScheme.slice(at + 1);
+  const prefix = at === -1 ? scheme : `${scheme}${credentials}@`;
+
+  // Split a trailing query string (e.g. "?appName=Cluster3") off the host.
+  const queryAt = rest.indexOf('?');
+  const host = queryAt === -1 ? rest : rest.slice(0, queryAt);
+  const query = queryAt === -1 ? '' : rest.slice(queryAt);
+
+  // The path may already be present but empty ("host/?appName=X"), so trim any
+  // trailing slashes to avoid producing "host//northstar".
+  return `${prefix}${host.replace(/\/+$/, '')}/${DEFAULT_MONGO_DB}${query}`;
+}
+
 const problems = [];
 const warnings = [];
 
@@ -104,15 +139,16 @@ if (!mongoUri) {
   problems.push('Missing required environment variable: MONGODB_URI');
 } else if (!/^mongodb(\+srv)?:\/\//.test(mongoUri)) {
   problems.push('MONGODB_URI does not look like a valid MongoDB connection string.');
-} else if (!mongoDatabaseName(mongoUri)) {
-  // A URI with no database in the path (mongodb+srv://...host/?appName=X) silently
-  // defaults to a database literally named "test", so accounts are written where
-  // nobody looks for them. This is the single most damaging config mistake here,
-  // so it is a hard failure rather than a warning.
-  problems.push(
-    'MONGODB_URI has no database name. Add /northstar before the "?" '
-      + '(mongodb+srv://USER:PASS@host/northstar?retryWrites=true). '
-      + 'Without it every account is written to a throwaway database named "test".',
+} else if (!mongoDatabaseName(rawMongoUri)) {
+  // The URI omitted its database name, so it has been repaired above. Warn so
+  // the env var gets corrected, but keep serving — refusing to boot would take
+  // the entire site offline for a configuration detail that is already handled.
+  warnings.push(
+    `MONGODB_URI had no database name and was normalised to "${mongoUri.replace(
+      /\/\/[^@]*@/,
+      '//***@',
+    )}". Set MONGODB_URI to include /${DEFAULT_MONGO_DB} so the value in your `
+      + 'dashboard matches what the app uses.',
   );
 }
 
@@ -146,6 +182,11 @@ if (problems.length && !isTest) {
   if (isProduction) {
     throw new Error('Invalid server configuration. See the logs above for details.');
   }
+}
+
+if (warnings.length && !isTest) {
+  const details = warnings.map((line) => `  - ${line}`).join('\n');
+  console.warn(`\n[env] Configuration warnings:\n${details}\n`);
 }
 
 const config = Object.freeze({
