@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const config = require('./env');
+
+// On systems where local DNS resolver rejects SRV lookups (querySrv ECONNREFUSED):
+if (config.mongo.uri && config.mongo.uri.includes('+srv')) {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (err) {
+    // If setting custom DNS fails, proceed with default resolver
+  }
+}
 
 /**
  * Reusable MongoDB connection module.

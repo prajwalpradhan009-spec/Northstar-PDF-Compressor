@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
     // A failure still clears local state — an unreachable server must not leave
     // the UI believing the old session is good.
     authApi
-      .logout()
+      .logout(controller.signal)
       .catch((error) => {
         if (error?.name !== 'AbortError' && !(error instanceof ApiError)) {
           console.warn('[auth] could not clear the previous session:', error?.message);

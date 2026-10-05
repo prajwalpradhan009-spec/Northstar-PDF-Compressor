@@ -119,7 +119,7 @@ export function AuthFields({ fields, errors, onChange, showPassword, onTogglePas
 }
 
 export function useAuthForm(mode) {
-  const { signin, signup } = useAuth();
+  const { signin, signup, loading: authLoading } = useAuth();
   const { success, error } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -127,7 +127,6 @@ export function useAuthForm(mode) {
   const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
-  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -171,12 +170,11 @@ export function useAuthForm(mode) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (busy) return;
+    if (busy || authLoading) return;
     if (!validate()) return;
 
     setBusy(true);
     setFormError('');
-    setNotice('');
 
     try {
       if (mode === 'signup') {
@@ -191,7 +189,6 @@ export function useAuthForm(mode) {
           state: { registeredEmail: fields.email.trim(), from: location.state?.from },
           replace: true,
         });
-        setNotice(data?.message || 'Account created successfully.');
         success(data?.message || 'Account created successfully.');
       } else {
         const data = await signin({ email: fields.email.trim(), password: fields.password });
@@ -212,5 +209,5 @@ export function useAuthForm(mode) {
 
   const togglePassword = () => setShowPassword((value) => !value);
 
-  return { fields, errors, formError, notice, busy, showPassword, onChange, submit, togglePassword, setNotice };
+  return { fields, errors, formError, busy, authLoading, showPassword, onChange, submit, togglePassword };
 }

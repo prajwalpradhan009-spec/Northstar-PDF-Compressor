@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import { Loader } from '../components/Loader';
 import { AuthFields, useAuthForm } from './useAuthForm';
-import { AlertCircle, Eye, Lock, ShieldCheck, Star } from '../components/icons';
+import { AlertCircle, Lock, ShieldCheck, Star } from '../components/icons';
 
 /** Simple 0–4 strength score used only for the meter. */
 function scorePassword(password) {
@@ -110,7 +110,7 @@ export default function SignUp() {
               )}
             </div>
 
-            <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={form.busy}>
+            <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={form.busy || form.authLoading}>
               {form.busy ? <Loader text="Creating account…" /> : 'Create Account'}
             </button>
 

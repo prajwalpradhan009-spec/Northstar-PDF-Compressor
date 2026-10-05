@@ -58,13 +58,6 @@ export default function SignIn() {
             </div>
           )}
 
-          {form.notice && (
-            <div className="form-alert form-alert--success mb-20" role="status">
-              <CheckCircle2 />
-              <span>{form.notice}</span>
-            </div>
-          )}
-
           {form.formError && (
             <div className="form-alert mb-20" role="alert">
               <AlertCircle />
@@ -83,7 +76,7 @@ export default function SignIn() {
               mode="signin"
             />
 
-            <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={form.busy}>
+            <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={form.busy || form.authLoading}>
               {form.busy ? <Loader text="Signing in…" /> : 'Sign In'}
             </button>
 
