@@ -82,6 +82,21 @@ const imageMaxUploadMb = readNumber('IMAGE_MAX_UPLOAD_MB', 15);
 const imageMaxDimension = readNumber('IMAGE_MAX_DIMENSION_PX', 8000);
 const sessionMaxAgeDays = readNumber('SESSION_MAX_AGE_DAYS', 7);
 
+/**
+ * Extract the database name from a connection string.
+ *
+ * Returns null when the path segment is missing or empty, which is the case
+ * that silently resolves to the "test" database at runtime.
+ */
+function mongoDatabaseName(uri) {
+  const withoutScheme = uri.replace(/^mongodb(\+srv)?:\/\//, '');
+  const afterCredentials = withoutScheme.slice(withoutScheme.indexOf('@') + 1);
+  const slash = afterCredentials.indexOf('/');
+  if (slash === -1) return null;
+  const name = afterCredentials.slice(slash + 1).split('?')[0].trim();
+  return name.length ? name : null;
+}
+
 const problems = [];
 const warnings = [];
 
@@ -89,6 +104,16 @@ if (!mongoUri) {
   problems.push('Missing required environment variable: MONGODB_URI');
 } else if (!/^mongodb(\+srv)?:\/\//.test(mongoUri)) {
   problems.push('MONGODB_URI does not look like a valid MongoDB connection string.');
+} else if (!mongoDatabaseName(mongoUri)) {
+  // A URI with no database in the path (mongodb+srv://...host/?appName=X) silently
+  // defaults to a database literally named "test", so accounts are written where
+  // nobody looks for them. This is the single most damaging config mistake here,
+  // so it is a hard failure rather than a warning.
+  problems.push(
+    'MONGODB_URI has no database name. Add /northstar before the "?" '
+      + '(mongodb+srv://USER:PASS@host/northstar?retryWrites=true). '
+      + 'Without it every account is written to a throwaway database named "test".',
+  );
 }
 
 if (!jwtSecret) {
@@ -141,6 +166,12 @@ const config = Object.freeze({
   },
   cors: { frontendUrl, allowedOrigins, origins: corsOrigins },
 
+  // Declared inside the frozen object on purpose: assigning to a frozen
+  // `module.exports` afterwards silently drops the values, which made these
+  // validation results unreadable to anything inspecting the config.
+  problems: [...problems],
+  warnings: [...warnings],
+
   pdf: {
     maxFiles: pdfMaxFiles,
     maxUploadMb: pdfMaxUploadMb,
@@ -160,5 +191,3 @@ const config = Object.freeze({
 });
 
 module.exports = config;
-module.exports.problems = problems;
-module.exports.warnings = warnings;
