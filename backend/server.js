@@ -23,18 +23,34 @@ app.set('trust proxy', 1);
  * `credentials: true` is required for the auth cookie to travel.
  * ------------------------------------------------------------------ */
 
-app.use(cors({
-  origin(origin, callback) {
-    // Same-origin requests, curl and health checks send no Origin header.
-    if (!origin) return callback(null, true);
-    if (config.cors.origins.has(origin)) return callback(null, true);
-    return callback(new Error(`Origin ${origin} is not allowed by ALLOWED_ORIGINS.`));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  exposedHeaders: ['Content-Disposition', 'X-Page-Count', 'X-Source-Count', 'Content-Length'],
-  maxAge: 86400,
+// Same-origin requests must always be allowed, whatever ALLOWED_ORIGINS says.
+// When the API also serves the built frontend they share an origin, and a
+// stale or unset FRONTEND_URL must not lock the live site out of its own API.
+function isSelfOrigin(req, origin) {
+  const host = req.headers.host;
+  if (!host) return false;
+  return (
+    origin === `http://${host}` ||
+    origin === `https://${host}` ||
+    origin === `${req.protocol}://${host}`
+  );
+}
+
+app.use(cors((req, callback) => {
+  callback(null, {
+    origin(origin, done) {
+      // Same-origin requests, curl and health checks send no Origin header.
+      if (!origin) return done(null, true);
+      if (config.cors.origins.has(origin)) return done(null, true);
+      if (isSelfOrigin(req, origin)) return done(null, true);
+      return done(new Error(`Origin ${origin} is not allowed by ALLOWED_ORIGINS.`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'],
+    exposedHeaders: ['Content-Disposition', 'X-Page-Count', 'X-Source-Count', 'Content-Length'],
+    maxAge: 86400,
+  });
 }));
 
 if (config.env !== 'test') app.use(morgan('dev'));
