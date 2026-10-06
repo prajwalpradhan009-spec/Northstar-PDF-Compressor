@@ -356,6 +356,31 @@ async function run() {
     step('image compress', `${jpeg.length} → ${result.compressedSize} bytes (−${Math.round((1 - result.compressedSize / jpeg.length) * 100)}%)`);
   }
 
+  /* -- per-image output size limit -------------------------------- */
+  {
+    const form = multipart({
+      quality: '80',
+      format: 'jpeg',
+      maxOutputSize: '128',
+      outputSizeUnit: 'kb',
+    }, [{ field: 'files', buffer: jpeg, name: 'target-size.jpg', type: 'image/jpeg' }]);
+    const { body } = await json('/api/image/compress', { method: 'POST', body: form, expect: 200 });
+    const [result] = body.results;
+    assert.ok(result.compressedSize <= 128 * 1024, `expected at most 128 KB, got ${result.compressedSize} bytes`);
+    assert.equal(result.targetSizeMet, true);
+    step('per-image output size limit', `${result.compressedSize} bytes ≤ 128 KB`);
+  }
+
+  /* -- output size unit validation --------------------------------- */
+  {
+    const form = multipart({ maxOutputSize: '128', outputSizeUnit: 'gb' }, [
+      { field: 'files', buffer: jpeg, name: 'invalid-unit.jpg', type: 'image/jpeg' },
+    ]);
+    const { body } = await json('/api/image/compress', { method: 'POST', body: form, expect: 400 });
+    assert.ok(body.details?.outputSizeUnit, 'invalid output-size unit should be rejected');
+    step('output size unit validation', 'invalid unit rejected');
+  }
+
   /* -- resize + PNG round trip ------------------------------------- */
   {
     const form = multipart({ quality: '80', format: 'png', maxWidth: '400', maxHeight: '400' }, [

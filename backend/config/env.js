@@ -4,24 +4,30 @@ const fs = require('fs');
 const ROOT_DIR = path.resolve(__dirname, '..');
 
 /**
- * Locate and load the backend .env file.
+ * Locate and load backend environment files. `.env.local` is loaded first so
+ * developer-specific settings can override `.env` without replacing its
+ * unrelated secrets or shared configuration.
  * Render / Docker inject real environment variables, so a missing file is not
  * fatal there — dotenv simply becomes a no-op.
  */
-function loadEnvFile() {
+function loadEnvFiles() {
   const candidates = [
+    path.join(ROOT_DIR, '.env.local'),
     path.join(ROOT_DIR, '.env'),
+    path.join(ROOT_DIR, '..', '.env.local'),
     path.join(ROOT_DIR, '..', '.env'),
   ];
+  let firstLoaded = null;
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
+    if (!fs.existsSync(candidate)) continue;
+    dotenv.config({ path: candidate });
+    if (!firstLoaded) firstLoaded = candidate;
   }
-  return null;
+  return firstLoaded;
 }
 
 const dotenv = require('dotenv');
-const envFile = loadEnvFile();
-dotenv.config(envFile ? { path: envFile } : undefined);
+const envFile = loadEnvFiles();
 
 /** Values that must never reach production — caught at boot, not at first request. */
 const PLACEHOLDERS = new Set([

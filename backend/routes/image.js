@@ -66,6 +66,23 @@ function parseSettings(body = {}) {
   settings.maxWidth = parseDimension(body.maxWidth, 'maxWidth');
   settings.maxHeight = parseDimension(body.maxHeight, 'maxHeight');
 
+  // Optional maximum output size per image, provided in KB or MB.
+  settings.maxOutputBytes = null;
+  if (body.maxOutputSize !== undefined && body.maxOutputSize !== null && body.maxOutputSize !== '') {
+    const size = Number(body.maxOutputSize);
+    const unit = String(body.outputSizeUnit || 'kb').toLowerCase();
+    if (!Number.isFinite(size) || size <= 0) {
+      errors.maxOutputSize = 'Maximum file size must be a positive number.';
+    } else if (!['kb', 'mb'].includes(unit)) {
+      errors.outputSizeUnit = 'Maximum file size unit must be KB or MB.';
+    } else {
+      const bytes = size * (unit === 'mb' ? 1024 * 1024 : 1024);
+      if (bytes < 1024) errors.maxOutputSize = 'Maximum file size must be at least 1 KB.';
+      else if (bytes > 100 * 1024 * 1024) errors.maxOutputSize = 'Maximum file size cannot exceed 100 MB.';
+      else settings.maxOutputBytes = Math.round(bytes);
+    }
+  }
+
   if (Object.keys(errors).length) throw new HttpError(400, Object.values(errors)[0], errors);
   return settings;
 }
@@ -102,47 +119,87 @@ async function compressOne(file, settings) {
     throw new HttpError(400, 'Unsupported output format.');
   }
 
-  const pipeline = source.rotate(); // honour EXIF orientation before resizing
+  const encode = async (quality, scale = 1) => {
+    const pipeline = sharp(file.buffer, {
+      failOn: 'error',
+      limitInputPixels: 268402689,
+    }).rotate(); // honour EXIF orientation before resizing
 
-  const resize = {};
-  if (settings.maxWidth !== 'original') resize.width = settings.maxWidth;
-  if (settings.maxHeight !== 'original') resize.height = settings.maxHeight;
-  if (Object.keys(resize).length) {
-    pipeline.resize({ ...resize, fit: 'inside', withoutEnlargement: true });
+    const resize = {};
+    if (settings.maxWidth !== 'original') resize.width = settings.maxWidth;
+    if (settings.maxHeight !== 'original') resize.height = settings.maxHeight;
+    if (scale < 1) {
+      const swapsDimensions = [5, 6, 7, 8].includes(metadata.orientation);
+      const sourceWidth = swapsDimensions ? metadata.height : metadata.width;
+      const sourceHeight = swapsDimensions ? metadata.width : metadata.height;
+      const scaledWidth = Math.max(1, Math.round(sourceWidth * scale));
+      const scaledHeight = Math.max(1, Math.round(sourceHeight * scale));
+      resize.width = resize.width ? Math.min(resize.width, scaledWidth) : scaledWidth;
+      resize.height = resize.height ? Math.min(resize.height, scaledHeight) : scaledHeight;
+    }
+    if (Object.keys(resize).length) {
+      pipeline.resize({ ...resize, fit: 'inside', withoutEnlargement: true });
+    }
+
+    if (targetFormat === 'jpeg') {
+      pipeline.flatten({ background: '#ffffff' }).jpeg({
+        quality,
+        mozjpeg: true,
+        chromaSubsampling: '4:2:0',
+      });
+    } else if (targetFormat === 'png') {
+      pipeline.png({
+        compressionLevel: 9,
+        quality,
+        palette: quality <= 70,
+        effort: 7,
+      });
+    } else {
+      pipeline.webp({ quality, effort: 5 });
+    }
+
+    try {
+      return await pipeline.toBuffer({ resolveWithObject: true });
+    } catch (error) {
+      throw new HttpError(422, `Failed to compress "${sanitizeFilename(file.originalname)}". Try a lower quality or a smaller size.`);
+    }
+  };
+
+  let resolved = await encode(settings.quality);
+  if (settings.maxOutputBytes && resolved.data.length > settings.maxOutputBytes) {
+    let scale = 1;
+    let fitted = false;
+
+    // Prefer preserving dimensions; lower quality first, then progressively
+    // resize only if even the minimum quality cannot meet the requested limit.
+    for (let attempt = 0; attempt < 15 && !fitted; attempt += 1) {
+      let low = 10;
+      let high = settings.quality;
+      let candidate = null;
+
+      for (let search = 0; search < 5 && low <= high; search += 1) {
+        const quality = Math.ceil((low + high) / 2);
+        const trial = await encode(quality, scale);
+        if (trial.data.length <= settings.maxOutputBytes) {
+          candidate = trial;
+          low = quality + 1;
+        } else {
+          high = quality - 1;
+        }
+      }
+
+      if (candidate) {
+        resolved = candidate;
+        fitted = true;
+      } else {
+        resolved = await encode(10, scale);
+        scale *= 0.6;
+      }
+    }
   }
 
-  if (targetFormat === 'jpeg') {
-    // JPEG has no alpha channel — flatten onto white so transparency does not
-    // turn into black.
-    pipeline.flatten({ background: '#ffffff' }).jpeg({
-      quality: settings.quality,
-      // Cap chroma subsampling work without visibly hurting small images.
-      mozjpeg: true,
-      chromaSubsampling: '4:2:0',
-    });
-  } else if (targetFormat === 'png') {
-    pipeline.png({
-      // png is lossless, so "quality" maps to the palette/compression trade-off.
-      compressionLevel: 9,
-      quality: settings.quality,
-      palette: settings.quality <= 70,
-      effort: 7,
-    });
-  } else {
-    pipeline.webp({ quality: settings.quality, effort: 5 });
-  }
-
-  let output;
-  let outputMetadata;
-  try {
-    // `resolveWithObject` returns { data, info }; both are needed — `info`
-    // carries the real post-resize dimensions.
-    const resolved = await pipeline.toBuffer({ resolveWithObject: true });
-    output = resolved.data;
-    outputMetadata = resolved.info;
-  } catch (error) {
-    throw new HttpError(422, `Failed to compress "${sanitizeFilename(file.originalname)}". Try a lower quality or a smaller size.`);
-  }
+  const output = resolved.data;
+  const outputMetadata = resolved.info;
 
   const originalName = stripExtension(sanitizeFilename(file.originalname, 'image'));
   const outputName = `${originalName}.${FORMAT_EXT[targetFormat]}`;
@@ -160,6 +217,7 @@ async function compressOne(file, settings) {
     width: outputMetadata.width,
     height: outputMetadata.height,
     format: targetFormat,
+    targetSizeMet: !settings.maxOutputBytes || output.length <= settings.maxOutputBytes,
     savedPercent: file.size > 0 ? Math.round((1 - output.length / file.size) * 100) : 0,
   };
 }
@@ -204,6 +262,7 @@ router.post('/compress', compressLimiter, requireAuth, imageUpload, async (req, 
         width: result.width,
         height: result.height,
         format: result.format,
+        targetSizeMet: result.targetSizeMet,
         savedPercent: result.savedPercent,
         data: result.buffer.toString('base64'),
       });

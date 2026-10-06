@@ -163,6 +163,24 @@ app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   const indexPath = staticPath ? path.join(staticPath, 'index.html') : null;
   if (indexPath && fs.existsSync(indexPath)) return res.sendFile(indexPath);
+
+  // No build is present. In production this is a misconfigured deploy, not a
+  // normal state, so it fails loudly instead of answering 200 with a string
+  // that looks to a browser (and to health checks) like a working site.
+  if (config.isProduction) {
+    console.error(
+      '\n[server] FATAL: no frontend build found at frontend/dist.\n'
+        + '  The API is running, but the site itself cannot be served.\n'
+        + '  Build it during deploy with:\n'
+        + '    npm install --prefix frontend && npm run build --prefix frontend\n'
+        + '  Or set the build command on your host to "npm run build:frontend".\n',
+    );
+    return res.status(503).type('text/plain').send(
+      'NorthStar frontend build is missing. The API is healthy but the site '
+        + 'cannot be served. Check the deploy build command.',
+    );
+  }
+
   return res.status(200).send('NorthStar API is running. Start the frontend on http://localhost:5173 for the app.');
 });
 

@@ -35,6 +35,8 @@ const DEFAULT_SETTINGS = {
   format: 'original',
   maxWidth: 'original',
   maxHeight: 'original',
+  maxOutputSize: '',
+  outputSizeUnit: 'kb',
 };
 
 function isAcceptedImage(file) {
@@ -197,6 +199,8 @@ export default function ImageCompressor() {
     form.append('format', settings.format);
     form.append('maxWidth', String(settings.maxWidth));
     form.append('maxHeight', String(settings.maxHeight));
+    form.append('maxOutputSize', settings.maxOutputSize);
+    form.append('outputSizeUnit', settings.outputSizeUnit);
     return form;
   }, [images, settings]);
 
@@ -489,6 +493,41 @@ export default function ImageCompressor() {
                   />
                 )}
               </div>
+
+              {/* Maximum output file size */}
+              <div className="setting">
+                <div className="setting-head">
+                  <label className="setting-name" htmlFor="max-output-size">Maximum file size</label>
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <input
+                    id="max-output-size"
+                    type="number"
+                    className="glass-input"
+                    min="1"
+                    max={settings.outputSizeUnit === 'mb' ? '100' : '102400'}
+                    step="any"
+                    placeholder="No limit"
+                    value={settings.maxOutputSize}
+                    disabled={busy}
+                    onChange={(event) => patchSettings({ maxOutputSize: event.target.value })}
+                    aria-describedby="max-output-size-help"
+                  />
+                  <select
+                    className="glass-input"
+                    value={settings.outputSizeUnit}
+                    disabled={busy}
+                    onChange={(event) => patchSettings({ outputSizeUnit: event.target.value })}
+                    aria-label="Maximum file size unit"
+                  >
+                    <option value="kb">KB</option>
+                    <option value="mb">MB</option>
+                  </select>
+                </div>
+                <p id="max-output-size-help" className="text-dim text-sm" style={{ fontSize: '0.76rem' }}>
+                  Optional per image. Quality and dimensions may be reduced to meet the limit.
+                </p>
+              </div>
             </div>
 
             <p className="text-dim text-sm mt-20 row" style={{ gap: 7, fontSize: '0.8rem' }}>
@@ -631,6 +670,13 @@ export default function ImageCompressor() {
               {results.summary.count} image{results.summary.count === 1 ? '' : 's'} processed at {settings.quality}% quality
               {settings.format !== 'original' ? ` · converted to ${settings.format.toUpperCase()}` : ''}
             </p>
+            {settings.maxOutputSize && (
+              <p className="text-dim text-sm center mt-12">
+                {results.results.every((result) => result.targetSizeMet)
+                  ? 'All images are within the selected file-size limit.'
+                  : 'Some images could not be reduced to the selected limit.'}
+              </p>
+            )}
 
             <div className="metrics">
               <div className="metric">

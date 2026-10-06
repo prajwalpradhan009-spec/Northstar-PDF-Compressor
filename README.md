@@ -16,7 +16,7 @@ NORTHSTAR PDF COMPRASSOR
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `/`                 | Landing page: hero, feature grid, how-it-works, FAQ                                                                           |
 | `/pdf-merger`       | **Account required.** Drag up to 20 PDFs, reorder them, merge, download                                                       |
-| `/image-compressor` | **Account required.** Compress JPG/PNG/WEBP with a quality + max-dimension target, preview, download individually or as a ZIP |
+| `/image-compressor` | **Account required.** Compress JPG/PNG/WEBP with quality, max dimensions and optional per-image KB/MB limit; preview and download individually or as a ZIP |
 | `/signin`           | Email + password sign-in                                                                                                      |
 | `/signup`           | Create an account (live validation, password strength meter)                                                                  |
 | `/dashboard`        | Protected: merge/compression counts, bytes saved, recent activity                                                             |
@@ -63,12 +63,12 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 | Variable                 | Default                                       | Notes                                  |
 | ------------------------ | --------------------------------------------- | -------------------------------------- |
-| `PORT`                   | `5001`                                        | API port; Render injects its own value |
+| `PORT`                   | `5000`                                        | API port; Render injects its own value |
 | `NODE_ENV`               | `development`                                 | `production` turns on Secure cookies   |
 | `MONGODB_URI`            | `mongodb://127.0.0.1:27017/northstar`         | Database connection                    |
 | `JWT_SECRET`             | —                                             | **Required.** 48+ random bytes         |
 | `FRONTEND_URL`           | —                                             | Frontend origin allowed by CORS        |
-| `ALLOWED_ORIGINS`        | `http://localhost:5173,http://localhost:5001` | Additional CORS origins                |
+| `ALLOWED_ORIGINS`        | `http://localhost:5173,http://localhost:5000` | Additional CORS origins                |
 | `SESSION_MAX_AGE_DAYS`   | `7`                                           | Session lifetime                       |
 | `PDF_MAX_FILES`          | `20`                                          |                                        |
 | `PDF_MAX_UPLOAD_MB`      | `50`                                          | Per file                               |
@@ -86,8 +86,15 @@ npm run dev:backend     # http://localhost:5000
 npm run dev:frontend    # http://localhost:5173
 ```
 
-Then open <http://localhost:5173>. Vite proxies `/api` to port 5000, so the auth
-cookie stays first-party in development exactly as it is in production.
+Then open <http://localhost:5173>. Vite proxies `/api` to the backend port in
+`backend/.env` (`5000` by default), so the auth cookie stays first-party in
+development exactly as it is in production.
+
+Local development uses the MongoDB Community Server at
+`mongodb://127.0.0.1:27017/northstar`; MongoDB Compass can connect to that same
+URI to inspect the database. `backend/.env.local` contains the local database
+override and takes precedence over `backend/.env`, so Atlas credentials there
+remain untouched.
 
 ### Production
 
@@ -187,7 +194,7 @@ a client-side hop stays signed in, and a reload signs them out again.
 | ------ | ----------------------------- | ---- | ------------------------------------------------------------------------ |
 | POST   | `/api/pdf/merge`              | ✔    | `files[]` + optional `order`. Returns a PDF blob with `X-Page-Count`.    |
 | POST   | `/api/pdf/inspect`            | ✔    | Page counts for the upload cards.                                        |
-| POST   | `/api/image/compress`         | ✔    | `files[]` + `quality/format/maxWidth/maxHeight`. Returns base64 results. |
+| POST   | `/api/image/compress`         | ✔    | `files[]` + `quality/format/maxWidth/maxHeight`, optional `maxOutputSize/outputSizeUnit`. Returns base64 results. |
 | POST   | `/api/image/compress-and-zip` | ✔    | Same input, streams a ZIP.                                               |
 | GET    | `/api/image/limits`           | –    | Server-side limits, so the UI cannot drift.                              |
 | GET    | `/api/health`                 | –    | Config + database status.                                                |
