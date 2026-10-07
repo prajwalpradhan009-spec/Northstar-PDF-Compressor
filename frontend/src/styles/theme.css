@@ -20,16 +20,16 @@
   --amber: #fbbf24;
 
   /* --- Text ---------------------------------------------------------- */
-  --text: #eef2ff;
-  --text-soft: #b6c0dd;
-  --text-dim: #8b95b5;
-  --text-faint: #667090;
+  --text: #f5f7ff;
+  --text-soft: #c7d2e8;
+  --text-dim: #a5b1d0;
+  --text-faint: #8998b8;
 
   /* --- Glass --------------------------------------------------------- */
-  --glass-bg: rgba(255, 255, 255, 0.045);
-  --glass-bg-strong: rgba(255, 255, 255, 0.075);
-  --glass-border: rgba(255, 255, 255, 0.11);
-  --glass-border-strong: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-strong: rgba(255, 255, 255, 0.095);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-strong: rgba(255, 255, 255, 0.24);
   --glass-blur: 22px;
   --glass-blur-lg: 34px;
   --glass-saturate: 145%;
