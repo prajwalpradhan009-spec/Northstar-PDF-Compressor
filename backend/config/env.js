@@ -90,6 +90,13 @@ const imageMaxFiles = readNumber('IMAGE_MAX_FILES', 20);
 const imageMaxUploadMb = readNumber('IMAGE_MAX_UPLOAD_MB', 15);
 const imageMaxDimension = readNumber('IMAGE_MAX_DIMENSION_PX', 8000);
 const sessionMaxAgeDays = readNumber('SESSION_MAX_AGE_DAYS', 7);
+const smtpHost = readString('SMTP_HOST', 'smtp.gmail.com');
+const smtpUser = readString('EMAIL_USER') || readString('SMTP_USER');
+const smtpPass = (readString('EMAIL_APP_PASSWORD') || readString('SMTP_PASS')).replace(/\s+/g, '');
+const smtpFrom = readString('SMTP_FROM', smtpUser);
+const smtpPort = readNumber('SMTP_PORT', 587);
+const smtpSecure = readString('SMTP_SECURE').toLowerCase() === 'true';
+const otpExpiresMinutes = Math.min(60, readNumber('OTP_EXPIRES_MINUTES', 10));
 
 /**
  * Extract the database name from a connection string.
@@ -210,6 +217,17 @@ const config = Object.freeze({
     sessionMaxAgeDays,
     cookieName: 'northstar_session',
     maxAgeMs: sessionMaxAgeDays * 24 * 60 * 60 * 1000,
+  },
+  email: {
+    configured: Boolean(smtpHost && smtpUser && smtpPass && smtpFrom),
+    otpExpiresMinutes,
+    smtp: {
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: { user: smtpUser, pass: smtpPass },
+    },
+    from: smtpFrom,
   },
   cors: { frontendUrl, allowedOrigins, origins: corsOrigins },
 

@@ -21,6 +21,7 @@ export default function SignIn() {
 
   // Pre-fill the email after a successful signup, and explain why they are here.
   const registeredEmail = location.state?.registeredEmail;
+  const passwordReset = location.state?.passwordReset;
   // Set by the route guard when a tool refused to open for a signed-out visitor.
   const requiredFor = location.state?.requiredFor;
 
@@ -42,6 +43,13 @@ export default function SignIn() {
               <span>
                 Account created successfully. You can sign in now as <strong>{registeredEmail}</strong>.
               </span>
+            </div>
+          )}
+
+          {passwordReset && (
+            <div className="form-alert form-alert--success mb-20" role="status">
+              <CheckCircle2 />
+              <span>Your password has been reset. Sign in with your new password.</span>
             </div>
           )}
 
@@ -75,6 +83,12 @@ export default function SignIn() {
               busy={form.busy}
               mode="signin"
             />
+
+            <div className="auth-forgot-row">
+              <Link className="link" to="/forgot-password" state={{ email: form.fields.email }}>
+                Forgot password?
+              </Link>
+            </div>
 
             <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={form.busy || form.authLoading}>
               {form.busy ? <Loader text="Signing in…" /> : 'Sign In'}

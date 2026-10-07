@@ -37,6 +37,15 @@ services:
       - key: MONGODB_URI
         sync: false
 
+      - key: EMAIL_USER
+        sync: false
+
+      - key: EMAIL_APP_PASSWORD
+        sync: false
+
+      - key: OTP_EXPIRES_MINUTES
+        value: "10"
+
       # Exact public URL of the static frontend service.
 
       - key: FRONTEND_URL
@@ -83,5 +92,4 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-
 

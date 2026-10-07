@@ -1,8 +1,62 @@
+const crypto = require('node:crypto');
 const User = require('../models/User');
 const Activity = require('../models/Activity');
 const db = require('../config/db');
+const config = require('../config/env');
+const { sendPasswordResetCode } = require('../lib/email');
 const { signToken, setSessionCookie, clearSessionCookie } = require('../lib/tokens');
-const { HttpError, validateSignup, validateSignin, assertNoErrors } = require('../lib/validate');
+const {
+  HttpError,
+  validateSignup,
+  validateSignin,
+  validateOtpVerification,
+  validatePasswordReset,
+  assertNoErrors,
+} = require('../lib/validate');
+
+const RESET_CODE_MAX_ATTEMPTS = 5;
+const RESET_REQUEST_COOLDOWN_MS = 60 * 1000;
+const RESET_REQUEST_WINDOW_MS = 60 * 60 * 1000;
+const RESET_REQUEST_MAX_PER_WINDOW = 5;
+const RESET_TOKEN_TTL_MS = 10 * 60 * 1000;
+const GENERIC_RESET_MESSAGE = 'If an account with that email exists, a verification code has been sent.';
+
+function hashResetCode(email, code) {
+  return crypto.createHmac('sha256', config.auth.jwtSecret)
+    .update(`${email}:${code}`)
+    .digest('hex');
+}
+
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function safeHashMatch(expected, submitted) {
+  if (typeof expected !== 'string' || typeof submitted !== 'string') return false;
+  const expectedBuffer = Buffer.from(expected, 'hex');
+  const submittedBuffer = Buffer.from(submitted, 'hex');
+  return expectedBuffer.length === submittedBuffer.length
+    && expectedBuffer.length > 0
+    && crypto.timingSafeEqual(expectedBuffer, submittedBuffer);
+}
+
+function genericResetResponse(res) {
+  res.json({
+    message: GENERIC_RESET_MESSAGE,
+    expiresInMinutes: config.email.otpExpiresMinutes,
+  });
+}
+
+function clearResetAuthorization() {
+  return {
+    passwordResetCodeHash: null,
+    passwordResetExpiresAt: null,
+    passwordResetAttempts: 0,
+    passwordResetVerified: false,
+    passwordResetTokenHash: null,
+    passwordResetTokenExpiresAt: null,
+  };
+}
 
 /* ------------------------------------------------------------------ *
  * POST /api/auth/signup
@@ -88,6 +142,271 @@ async function signin(req, res, next) {
     return next(error);
   }
 }
+
+/* ------------------------------------------------------------------ *
+ * POST /api/auth/forgot-password
+ * ------------------------------------------------------------------ */
+async function requestPasswordReset(req, res, next) {
+  try {
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const { errors } = validateSignin({ email, password: 'unused' });
+    if (errors.email || email.length > 254) {
+      const message = errors.email || 'Please enter a valid email address.';
+      throw new HttpError(400, message, { email: message });
+    }
+
+    if (!db.isConnected()) {
+      throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
+    }
+    if (!config.email.configured) {
+      throw new HttpError(503, 'Password reset email is not configured yet. Please contact the site administrator.');
+    }
+
+    const user = await User.findOne({ email }).select('_id');
+    if (!user) return genericResetResponse(res);
+
+    const now = new Date();
+    const cooldownBefore = new Date(now.getTime() - RESET_REQUEST_COOLDOWN_MS);
+    const windowBefore = new Date(now.getTime() - RESET_REQUEST_WINDOW_MS);
+    const code = crypto.randomInt(100000, 1000000).toString();
+    const codeHash = hashResetCode(email, code);
+    const newWindow = {
+      $or: [
+        { $eq: [{ $ifNull: ['$passwordResetRequestWindowAt', null] }, null] },
+        { $lte: ['$passwordResetRequestWindowAt', windowBefore] },
+      ],
+    };
+
+    // Atomically apply both the per-email cooldown and hourly cap, including
+    // across multiple API instances. A blocked request gets the same response
+    // as an unknown email, so this state cannot be used to enumerate accounts.
+    const resetUser = await User.findOneAndUpdate(
+      {
+        _id: user._id,
+        $and: [
+          {
+            $or: [
+              { passwordResetRequestedAt: { $exists: false } },
+              { passwordResetRequestedAt: null },
+              { passwordResetRequestedAt: { $lte: cooldownBefore } },
+            ],
+          },
+          {
+            $or: [
+              { passwordResetRequestWindowAt: { $exists: false } },
+              { passwordResetRequestWindowAt: null },
+              { passwordResetRequestWindowAt: { $lte: windowBefore } },
+              { passwordResetRequestCount: { $lt: RESET_REQUEST_MAX_PER_WINDOW } },
+            ],
+          },
+        ],
+      },
+      [
+        {
+          $set: {
+            passwordResetCodeHash: codeHash,
+            passwordResetExpiresAt: new Date(now.getTime() + config.email.otpExpiresMinutes * 60 * 1000),
+            passwordResetAttempts: 0,
+            passwordResetVerified: false,
+            passwordResetTokenHash: null,
+            passwordResetTokenExpiresAt: null,
+            passwordResetRequestedAt: now,
+            passwordResetRequestWindowAt: {
+              $cond: [newWindow, now, '$passwordResetRequestWindowAt'],
+            },
+            passwordResetRequestCount: {
+              $cond: [
+                newWindow,
+                1,
+                { $add: [{ $ifNull: ['$passwordResetRequestCount', 0] }, 1] },
+              ],
+            },
+          },
+        },
+      ],
+      { new: true },
+    );
+
+    if (!resetUser) return genericResetResponse(res);
+
+    try {
+      await sendPasswordResetCode(email, code);
+    } catch (error) {
+      await User.updateOne(
+        { _id: resetUser._id, passwordResetCodeHash: codeHash },
+        { $set: clearResetAuthorization() },
+      );
+      console.error('[auth] password reset email delivery failed:', error?.code || error?.name || 'unknown error');
+    }
+
+    return genericResetResponse(res);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * POST /api/auth/verify-otp
+ * ------------------------------------------------------------------ */
+async function verifyOtp(req, res, next) {
+  try {
+    if (!db.isConnected()) {
+      throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
+    }
+
+    const { errors, value } = validateOtpVerification(req.body || {});
+    assertNoErrors(errors);
+
+    const user = await User.findOne({ email: value.email }).select(
+      '+passwordResetCodeHash +passwordResetExpiresAt +passwordResetAttempts +passwordResetVerified',
+    );
+    if (
+      !user
+      || !user.passwordResetCodeHash
+      || !user.passwordResetExpiresAt
+    ) {
+      throw new HttpError(400, 'The verification code is incorrect or expired.');
+    }
+    if (user.passwordResetAttempts >= RESET_CODE_MAX_ATTEMPTS) {
+      throw new HttpError(429, 'Too many incorrect verification codes. Request a new code.');
+    }
+
+    if (user.passwordResetExpiresAt.getTime() <= Date.now()) {
+      const matchesExpiredCode = safeHashMatch(user.passwordResetCodeHash, hashResetCode(value.email, value.otp));
+      await User.updateOne(
+        {
+          _id: user._id,
+          passwordResetCodeHash: user.passwordResetCodeHash,
+          passwordResetExpiresAt: { $lte: new Date() },
+        },
+        { $set: clearResetAuthorization() },
+      );
+      if (matchesExpiredCode) {
+        throw new HttpError(400, 'That verification code has expired. Request a new code.');
+      }
+      throw new HttpError(400, 'The verification code is incorrect or expired.');
+    }
+
+    if (!safeHashMatch(user.passwordResetCodeHash, hashResetCode(value.email, value.otp))) {
+      const attemptedUser = await User.findOneAndUpdate(
+        {
+          _id: user._id,
+          passwordResetCodeHash: user.passwordResetCodeHash,
+          passwordResetExpiresAt: { $gt: new Date() },
+          passwordResetAttempts: { $lt: RESET_CODE_MAX_ATTEMPTS },
+        },
+        { $inc: { passwordResetAttempts: 1 } },
+        { new: true },
+      ).select('+passwordResetAttempts');
+
+      if (attemptedUser?.passwordResetAttempts >= RESET_CODE_MAX_ATTEMPTS) {
+        await User.updateOne(
+          {
+            _id: user._id,
+            passwordResetCodeHash: user.passwordResetCodeHash,
+            passwordResetAttempts: { $gte: RESET_CODE_MAX_ATTEMPTS },
+          },
+          { $set: clearResetAuthorization() },
+        );
+        throw new HttpError(429, 'Too many incorrect verification codes. Request a new code.');
+      }
+      throw new HttpError(400, 'That verification code is incorrect.');
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('base64url');
+    const verifiedUser = await User.findOneAndUpdate(
+      {
+        _id: user._id,
+        passwordResetCodeHash: user.passwordResetCodeHash,
+        passwordResetExpiresAt: { $gt: new Date() },
+        passwordResetAttempts: { $lt: RESET_CODE_MAX_ATTEMPTS },
+      },
+      {
+        $set: {
+          passwordResetCodeHash: null,
+          passwordResetExpiresAt: null,
+          passwordResetAttempts: 0,
+          passwordResetVerified: true,
+          passwordResetTokenHash: hashResetToken(resetToken),
+          passwordResetTokenExpiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+        },
+      },
+      { new: true },
+    );
+    if (!verifiedUser) throw new HttpError(400, 'The verification code is incorrect or expired.');
+
+    res.json({ resetToken });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * POST /api/auth/reset-password
+ * ------------------------------------------------------------------ */
+async function resetPassword(req, res, next) {
+  try {
+    if (!db.isConnected()) {
+      throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
+    }
+
+    const { errors, value } = validatePasswordReset(req.body || {});
+    assertNoErrors(errors);
+
+    const user = await User.findOne({ email: value.email }).select(
+      '+passwordResetVerified +passwordResetTokenHash +passwordResetTokenExpiresAt',
+    );
+    if (
+      !user
+      || !user.passwordResetVerified
+      || !user.passwordResetTokenHash
+      || !user.passwordResetTokenExpiresAt
+    ) {
+      throw new HttpError(400, 'Your reset authorization is invalid or expired. Verify your email code again.');
+    }
+    if (user.passwordResetTokenExpiresAt.getTime() <= Date.now()) {
+      await User.updateOne(
+        {
+          _id: user._id,
+          passwordResetTokenHash: user.passwordResetTokenHash,
+          passwordResetTokenExpiresAt: { $lte: new Date() },
+        },
+        { $set: clearResetAuthorization() },
+      );
+      throw new HttpError(400, 'Your reset authorization is invalid or expired. Verify your email code again.');
+    }
+    if (!safeHashMatch(user.passwordResetTokenHash, hashResetToken(value.resetToken))) {
+      throw new HttpError(400, 'Your reset authorization is invalid or expired. Verify your email code again.');
+    }
+
+    const passwordHash = await User.hashPassword(value.newPassword);
+    const update = await User.updateOne(
+      {
+        _id: user._id,
+        passwordResetVerified: true,
+        passwordResetTokenHash: user.passwordResetTokenHash,
+        passwordResetTokenExpiresAt: { $gt: new Date() },
+      },
+      {
+        $set: {
+          passwordHash,
+          ...clearResetAuthorization(),
+        },
+        $inc: { tokenVersion: 1 },
+      },
+    );
+    if (update.modifiedCount !== 1) {
+      throw new HttpError(400, 'Your reset authorization is invalid or expired. Verify your email code again.');
+    }
+
+    res.json({ message: 'Your password has been reset. Sign in with your new password.' });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+const forgotPassword = (req, res, next) => requestPasswordReset(req, res, next);
+const resendOtp = (req, res, next) => requestPasswordReset(req, res, next);
 
 /* ------------------------------------------------------------------ *
  * POST /api/auth/logout
@@ -201,4 +520,16 @@ async function dashboard(req, res, next) {
   }
 }
 
-module.exports = { signup, signin, logout, me, updateProfile, logoutAll, dashboard };
+module.exports = {
+  signup,
+  signin,
+  forgotPassword,
+  verifyOtp,
+  resendOtp,
+  resetPassword,
+  logout,
+  me,
+  updateProfile,
+  logoutAll,
+  dashboard,
+};

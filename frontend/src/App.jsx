@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import PdfMerger from './pages/PdfMerger';
 import ImageCompressor from './pages/ImageCompressor';
 import SignIn from './pages/SignIn';
+import ForgotPassword from './pages/ForgotPassword';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import Account from './pages/Account';
@@ -63,6 +64,7 @@ export default function App() {
             )}
           />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/account" element={<Account />} />

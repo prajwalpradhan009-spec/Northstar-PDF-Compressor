@@ -52,6 +52,39 @@ function validateSignin({ email, password }) {
   return { errors, value: { email: normalizedEmail, password } };
 }
 
+function validateOtpVerification({ email, otp }) {
+  const errors = {};
+
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!normalizedEmail) errors.email = 'Email is required.';
+  else if (normalizedEmail.length > 254 || !EMAIL_REGEX.test(normalizedEmail)) errors.email = 'Please enter a valid email address.';
+
+  if (typeof otp !== 'string' || !/^\d{6}$/.test(otp)) errors.otp = 'Enter the 6-digit code from your email.';
+
+  return { errors, value: { email: normalizedEmail, otp } };
+}
+
+function validatePasswordReset({ email, resetToken, newPassword, confirmPassword }) {
+  const errors = {};
+
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!normalizedEmail) errors.email = 'Email is required.';
+  else if (normalizedEmail.length > 254 || !EMAIL_REGEX.test(normalizedEmail)) errors.email = 'Please enter a valid email address.';
+
+  if (typeof resetToken !== 'string' || resetToken.length < 32 || resetToken.length > 128) {
+    errors.resetToken = 'Please verify your email code again.';
+  }
+
+  if (typeof newPassword !== 'string' || !newPassword) errors.newPassword = 'Password is required.';
+  else if (newPassword.length < PASSWORD_MIN) errors.newPassword = `Password must be at least ${PASSWORD_MIN} characters.`;
+  else if (newPassword.length > PASSWORD_MAX) errors.newPassword = `Password must be ${PASSWORD_MAX} characters or fewer.`;
+
+  if (!confirmPassword) errors.confirmPassword = 'Please confirm your password.';
+  else if (confirmPassword !== newPassword) errors.confirmPassword = 'Passwords do not match.';
+
+  return { errors, value: { email: normalizedEmail, resetToken, newPassword } };
+}
+
 /** Throw a 400 with per-field messages if anything failed. */
 function assertNoErrors(errors) {
   if (Object.keys(errors).length) {
@@ -105,6 +138,8 @@ module.exports = {
   EMAIL_REGEX,
   validateSignup,
   validateSignin,
+  validateOtpVerification,
+  validatePasswordReset,
   assertNoErrors,
   sanitizeFilename,
   stripExtension,

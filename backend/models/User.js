@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const SALT_ROUNDS = 12;
 
@@ -38,6 +38,15 @@ const userSchema = new mongoose.Schema(
     // Bumping this invalidates every cookie already issued for the user.
     tokenVersion: { type: Number, default: 0 },
     lastLoginAt: { type: Date, default: null },
+    passwordResetCodeHash: { type: String, default: null, select: false },
+    passwordResetExpiresAt: { type: Date, default: null, select: false },
+    passwordResetAttempts: { type: Number, default: 0, select: false },
+    passwordResetVerified: { type: Boolean, default: false, select: false },
+    passwordResetTokenHash: { type: String, default: null, select: false },
+    passwordResetTokenExpiresAt: { type: Date, default: null, select: false },
+    passwordResetRequestedAt: { type: Date, default: null, select: false },
+    passwordResetRequestWindowAt: { type: Date, default: null, select: false },
+    passwordResetRequestCount: { type: Number, default: 0, select: false },
   },
   {
     timestamps: true, // createdAt / updatedAt
@@ -65,6 +74,10 @@ userSchema.methods.verifyPassword = async function verifyPassword(candidate) {
   if (typeof candidate !== 'string' || !candidate) return false;
   if (!this.passwordHash) return false;
   return bcrypt.compare(candidate, this.passwordHash);
+};
+
+userSchema.statics.hashPassword = function hashPassword(password) {
+  return bcrypt.hash(password, SALT_ROUNDS);
 };
 
 /** The only shape ever sent to the client — no hash, no token version. */

@@ -11,6 +11,7 @@
  */
 
 const assert = require('node:assert/strict');
+const crypto = require('node:crypto');
 const { PDFDocument } = require('pdf-lib');
 const sharp = require('sharp');
 
@@ -18,6 +19,7 @@ const BASE = (process.argv[2] || process.env.SMOKE_BASE_URL || 'http://localhost
 const stamp = Date.now();
 const EMAIL = `smoke-${stamp}@northstar.test`;
 const PASSWORD = 'SmokeTest!2345';
+const RESET_PASSWORD = 'ResetPassword!2345';
 
 let passed = 0;
 const jar = new Map();
@@ -148,6 +150,52 @@ async function cleanup() {
   }
 }
 
+async function seedResetCode(code, { expiresAt = new Date(Date.now() + 10 * 60 * 1000), attempts = 0 } = {}) {
+  const mongoose = require('mongoose');
+  const config = require('../config/env');
+  await mongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 5000 });
+  try {
+    const passwordResetCodeHash = crypto.createHmac('sha256', config.auth.jwtSecret)
+      .update(`${EMAIL}:${code}`)
+      .digest('hex');
+    const result = await mongoose.connection.db.collection('users').updateOne(
+      { email: EMAIL },
+      {
+        $set: {
+          passwordResetCodeHash,
+          passwordResetExpiresAt: expiresAt,
+          passwordResetAttempts: attempts,
+          passwordResetVerified: false,
+          passwordResetTokenHash: null,
+          passwordResetTokenExpiresAt: null,
+          passwordResetRequestedAt: new Date(),
+          passwordResetRequestWindowAt: new Date(),
+          passwordResetRequestCount: 1,
+        },
+      },
+    );
+    assert.equal(result.matchedCount, 1, 'smoke account must exist before seeding reset code');
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
+async function assertStoredPasswordIsHashed() {
+  const mongoose = require('mongoose');
+  const config = require('../config/env');
+  await mongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 5000 });
+  try {
+    const user = await mongoose.connection.db.collection('users').findOne(
+      { email: EMAIL },
+      { projection: { passwordHash: 1 } },
+    );
+    assert.ok(user?.passwordHash?.startsWith('$2'), 'stored password should be a bcrypt hash');
+    assert.notEqual(user.passwordHash, RESET_PASSWORD, 'plain password must never be stored');
+  } finally {
+    await mongoose.disconnect();
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * Suite
  * ------------------------------------------------------------------ */
@@ -211,6 +259,27 @@ async function run() {
     step('duplicate email', '409 with field message');
   }
 
+  /* -- password reset email configuration ------------------------- */
+  {
+    await json('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email' }),
+      expect: 400,
+    });
+
+    const config = require('../config/env');
+    const { body } = await json('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: `unknown-${stamp}@northstar.test` }),
+      expect: config.email.configured ? 200 : 503,
+    });
+    if (config.email.configured) assert.match(body.message, /if an account exists/i);
+    else assert.match(body.error, /email is not configured/i);
+    step('password reset email setup', config.email.configured ? 'generic unknown-account response' : 'missing SMTP reported clearly');
+  }
+
   /* -- wrong password ---------------------------------------------- */
   {
     await json('/api/auth/signin', {
@@ -260,6 +329,105 @@ async function run() {
     assert.match(session, /SameSite=Lax/i, 'cookie must be SameSite=Lax');
     assert.ok(!/secure/i.test(session), 'dev cookie should not be Secure');
     step('signin', 'HttpOnly + SameSite=Lax cookie set');
+  }
+
+  /* -- email OTP password reset ------------------------------------ */
+  {
+    const code = '123456';
+    await seedResetCode(code, { expiresAt: new Date(Date.now() - 1000) });
+    const resend = await json('/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL }),
+      expect: 200,
+    });
+    assert.match(resend.body.message, /if an account with that email exists/i);
+    step('resend cooldown', 'recent request receives the same generic response without a resend');
+
+    const expired = await json('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, otp: code }),
+      expect: 400,
+    });
+    assert.match(expired.body.error, /expired/i);
+    step('expired reset OTP rejected', '400');
+
+    await seedResetCode(code);
+
+    for (let attempt = 1; attempt <= 5; attempt += 1) {
+      const { body } = await json('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: EMAIL, otp: '000000' }),
+        expect: attempt === 5 ? 429 : 400,
+      });
+      if (attempt === 5) assert.match(body.error, /too many/i);
+    }
+    await json('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, otp: code }),
+      expect: 400,
+    });
+    step('OTP attempt limit', 'five incorrect attempts invalidate the code');
+
+    await seedResetCode(code);
+    const verification = await json('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, otp: code }),
+      expect: 200,
+    });
+    assert.equal(typeof verification.body.resetToken, 'string');
+    assert.equal(verification.body.resetToken.length, 43);
+    assert.equal(verification.body.otp, undefined, 'OTP must never be returned');
+
+    const { body } = await json('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: EMAIL,
+        resetToken: verification.body.resetToken,
+        newPassword: RESET_PASSWORD,
+        confirmPassword: RESET_PASSWORD,
+      }),
+      expect: 200,
+    });
+    assert.match(body.message, /password has been reset/i);
+    await json('/api/auth/me', { expect: 401 });
+    await json('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: EMAIL,
+        resetToken: verification.body.resetToken,
+        newPassword: RESET_PASSWORD,
+        confirmPassword: RESET_PASSWORD,
+      }),
+      expect: 400,
+    });
+    await json('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, otp: code }),
+      expect: 400,
+    });
+    await json('/api/auth/signin', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+      expect: 401,
+    });
+    const signin = await json('/api/auth/signin', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: EMAIL, password: RESET_PASSWORD }),
+      expect: 200,
+    });
+    assert.ok(signin.setCookies.some((cookie) => cookie.startsWith('northstar_session=')));
+    await assertStoredPasswordIsHashed();
+    step('password reset', 'OTP and reset token are single-use, sessions are revoked, new password signs in');
   }
 
   /* -- me ---------------------------------------------------------- */
@@ -493,7 +661,7 @@ async function run() {
     await json('/api/auth/signin', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+      body: JSON.stringify({ email: EMAIL, password: RESET_PASSWORD }),
       expect: 200,
     });
     await json('/api/auth/me', { expect: 200 });

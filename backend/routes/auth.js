@@ -18,9 +18,34 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
 });
+const passwordResetRequestLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many reset requests. Please wait before requesting another email.' },
+});
+const passwordResetVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many password reset attempts. Please wait a few minutes and try again.' },
+});
+const passwordResetResendLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many verification code requests. Please wait before trying again.' },
+});
 
 router.post('/signup', authLimiter, controller.signup);
 router.post('/signin', authLimiter, controller.signin);
+router.post('/forgot-password', passwordResetRequestLimiter, controller.forgotPassword);
+router.post('/verify-otp', passwordResetVerifyLimiter, controller.verifyOtp);
+router.post('/resend-otp', passwordResetResendLimiter, controller.resendOtp);
+router.post('/reset-password', passwordResetVerifyLimiter, controller.resetPassword);
 router.post('/logout', controller.logout);
 
 router.get('/me', requireAuth, controller.me);
