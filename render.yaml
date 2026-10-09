@@ -1,23 +1,37 @@
-﻿# Render deployment blueprint for NorthStar's separate API and frontend.
-# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
-# Values marked `sync: false` are requested during initial Blueprint setup.
+﻿# Render deployment blueprint for NorthStar — a SINGLE web service.
+#
+# The Express API also serves the built React frontend (frontend/dist) from the
+# same origin, so no separate static site and no VITE_API_URL / cross-origin
+# cookie handling are needed. Deploy: Render dashboard -> New -> Blueprint ->
+# pick this repo. Values marked `sync: false` are requested during the initial
+# Blueprint setup.
 
 services:
   - type: web
     name: northstar
     runtime: node
     plan: free
-    # The API serves frontend/dist as static files, so the frontend must be
-    # BUILT here. Installing only the backend leaves no dist/ and the site
-    # answers every request with the "NorthStar API is running" placeholder.
-    buildCommand: npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend
+    # Root directory is the repository root (leave "Root Directory" empty in
+    # the Render dashboard) so both backend/ and frontend/ are in the checkout.
+    #
+    # The frontend MUST be built here: frontend/dist is git-ignored, so a
+    # backend-only install leaves no dist/ and server.js answers every page
+    # request with a 503 ("no frontend build found").
+    #
+    # --include=dev on the frontend install is REQUIRED: Render sets
+    # NODE_ENV=production for the whole build, and npm then skips
+    # devDependencies — where Vite lives. Without it, `vite build` fails with
+    # "vite: not found" and the deploy never produces dist/.
+    buildCommand: >-
+      npm install --prefix backend
+      && npm install --include=dev --prefix frontend
+      && npm run build --prefix frontend
     startCommand: npm start --prefix backend
     healthCheckPath: /api/health
 
     envVars:
       - key: NODE_ENV
         value: production
-
 
       # PORT is deliberately NOT set here. Render injects its own PORT and
       # server.js binds to it, so hard-coding 5001 (or 5000) would break the
@@ -33,6 +47,8 @@ services:
 
       # MongoDB Atlas SRV string, e.g.
       # mongodb+srv://USER:PASS@cluster0.xxxxx.mongodb.net/northstar?retryWrites=true&w=majority
+      # Include the /northstar database name (the server appends it if the URI
+      # omits it, but a matching dashboard value avoids silent "test" DB use).
       # Paste the password URL-encoded (@ -> %40, and any # -> %23).
       - key: MONGODB_URI
         sync: false
@@ -46,10 +62,15 @@ services:
       - key: OTP_EXPIRES_MINUTES
         value: "10"
 
-      # Exact public URL of the static frontend service.
-
+      # Exact public URL of THIS service (https://northstar.onrender.com).
+      # The API serves the frontend, so this is both the site and the API
+      # origin. Required by env validation; same-origin requests are also
+      # allowed automatically as a safety net.
       - key: FRONTEND_URL
         sync: false
+
+      # Optional extra CORS origins, comma-separated. Same-origin never needs
+      # to be listed.
 
       - key: SESSION_MAX_AGE_DAYS
         value: "7"
@@ -71,25 +92,3 @@ services:
 
       - key: IMAGE_MAX_DIMENSION_PX
         value: "8000"
-
-  - type: web
-    name: northstar-frontend
-    runtime: static
-    buildCommand: npm install --prefix frontend && npm run build --prefix frontend
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_PDF_MAX_FILES
-        value: "5"
-      - key: VITE_PDF_MAX_UPLOAD_MB
-        value: "10"
-      - key: VITE_IMAGE_MAX_FILES
-        value: "5"
-      - key: VITE_IMAGE_MAX_UPLOAD_MB
-        value: "5"
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-
