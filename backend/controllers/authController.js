@@ -246,8 +246,11 @@ async function requestPasswordReset(req, res, next) {
         error?.responseCode,
         error?.message,
       ].filter(Boolean).join(' | ') || 'unknown error';
+      const provider = config.email.provider === 'resend'
+        ? 'Resend API'
+        : `${config.email.smtp.host}:${config.email.smtp.port}`;
       console.error(
-        `[auth] password reset email delivery failed via ${config.email.smtp.host}:${config.email.smtp.port}: ${reason}`,
+        `[auth] password reset email delivery failed via ${provider}: ${reason}`,
       );
     }
 

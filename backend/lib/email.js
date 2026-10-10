@@ -3,32 +3,24 @@ const config = require('../config/env');
 
 let transporter;
 
-// Without explicit timeouts a blocked/hanging SMTP port keeps sendMail pending
-// for nodemailer's multi-minute defaults before it fails, so the reset request
-// stalls and the real cause is hard to see. Fail fast so the actual error is
-// logged promptly (see the controller's catch block).
-const SMTP_TIMEOUT_MS = 10000;
+// Fail quickly on blocked SMTP ports or an unresponsive email API so delivery
+// errors are logged promptly instead of leaving reset requests hanging.
+const EMAIL_REQUEST_TIMEOUT_MS = 10000;
 
 function getTransporter() {
-  if (!config.email.configured) {
-    throw new Error('SMTP email delivery is not configured.');
-  }
-
   if (!transporter) {
     transporter = nodemailer.createTransport({
       ...config.email.smtp,
-      connectionTimeout: SMTP_TIMEOUT_MS,
-      greetingTimeout: SMTP_TIMEOUT_MS,
-      socketTimeout: SMTP_TIMEOUT_MS,
+      connectionTimeout: EMAIL_REQUEST_TIMEOUT_MS,
+      greetingTimeout: EMAIL_REQUEST_TIMEOUT_MS,
+      socketTimeout: EMAIL_REQUEST_TIMEOUT_MS,
     });
   }
   return transporter;
 }
 
 async function sendPasswordResetCode(email, code) {
-  await getTransporter().sendMail({
-    from: config.email.from,
-    to: email,
+  const message = {
     subject: 'Northstar PDF Tools - Password Reset OTP',
     text: [
       `Your Northstar PDF Tools password reset verification code is: ${code}`,
@@ -49,6 +41,58 @@ async function sendPasswordResetCode(email, code) {
       '<p style="font-size:12px;line-height:1.6;color:#8290ae;margin:18px 0 0">If you did not request a password reset, you can safely ignore this email.</p></div></td></tr>',
       '</table><p style="font-size:11px;color:#687590;margin:18px 0 0">Northstar PDF Tools</p></td></tr></table></body></html>',
     ].join(''),
+  };
+
+  if (!config.email.configured) {
+    throw new Error(`${config.email.provider} email delivery is not configured.`);
+  }
+
+  if (config.email.provider === 'resend') {
+    let response;
+    try {
+      response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.email.resend.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...message,
+          from: config.email.resend.from,
+          to: [email],
+        }),
+        signal: AbortSignal.timeout(EMAIL_REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      const deliveryError = new Error(error.message);
+      deliveryError.code = error.code || 'RESEND_REQUEST_FAILED';
+      throw deliveryError;
+    }
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      let responseMessage = '';
+      try {
+        responseMessage = JSON.parse(responseText).message || '';
+      } catch {
+        responseMessage = '';
+      }
+      const error = new Error(responseMessage || `Resend API returned HTTP ${response.status}.`);
+      error.code = `RESEND_HTTP_${response.status}`;
+      error.responseCode = response.status;
+      throw error;
+    }
+    return;
+  }
+
+  if (config.email.provider !== 'smtp') {
+    throw new Error(`Unsupported email provider: ${config.email.provider}.`);
+  }
+
+  await getTransporter().sendMail({
+    ...message,
+    from: config.email.from,
+    to: email,
   });
 }
 

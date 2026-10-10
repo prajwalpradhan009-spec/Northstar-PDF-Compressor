@@ -277,7 +277,7 @@ async function run() {
     });
     if (config.email.configured) assert.match(body.message, /if an account with that email exists/i);
     else assert.match(body.error, /email is not configured/i);
-    step('password reset email setup', config.email.configured ? 'generic unknown-account response' : 'missing SMTP reported clearly');
+    step('password reset email setup', config.email.configured ? 'generic unknown-account response' : 'missing email provider reported clearly');
   }
 
   /* -- wrong password ---------------------------------------------- */

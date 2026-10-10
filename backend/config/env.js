@@ -90,6 +90,9 @@ const imageMaxFiles = readNumber('IMAGE_MAX_FILES', 20);
 const imageMaxUploadMb = readNumber('IMAGE_MAX_UPLOAD_MB', 15);
 const imageMaxDimension = readNumber('IMAGE_MAX_DIMENSION_PX', 8000);
 const sessionMaxAgeDays = readNumber('SESSION_MAX_AGE_DAYS', 7);
+const emailProvider = readString('EMAIL_PROVIDER', readString('RESEND_API_KEY') ? 'resend' : 'smtp').toLowerCase();
+const resendApiKey = readString('RESEND_API_KEY');
+const resendFrom = readString('EMAIL_FROM');
 const smtpHost = readString('SMTP_HOST', 'smtp.gmail.com');
 const smtpUser = readString('EMAIL_USER') || readString('SMTP_USER');
 const smtpPass = (readString('EMAIL_APP_PASSWORD') || readString('SMTP_PASS')).replace(/\s+/g, '');
@@ -219,8 +222,15 @@ const config = Object.freeze({
     maxAgeMs: sessionMaxAgeDays * 24 * 60 * 60 * 1000,
   },
   email: {
-    configured: Boolean(smtpHost && smtpUser && smtpPass && smtpFrom),
+    provider: emailProvider,
+    configured: emailProvider === 'resend'
+      ? Boolean(resendApiKey && resendFrom)
+      : emailProvider === 'smtp' && Boolean(smtpHost && smtpUser && smtpPass && smtpFrom),
     otpExpiresMinutes,
+    resend: {
+      apiKey: resendApiKey,
+      from: resendFrom,
+    },
     smtp: {
       host: smtpHost,
       port: smtpPort,

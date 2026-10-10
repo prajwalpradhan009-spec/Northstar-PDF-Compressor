@@ -53,10 +53,13 @@ services:
       - key: MONGODB_URI
         sync: false
 
-      - key: EMAIL_USER
+      - key: EMAIL_PROVIDER
+        value: resend
+
+      - key: RESEND_API_KEY
         sync: false
 
-      - key: EMAIL_APP_PASSWORD
+      - key: EMAIL_FROM
         sync: false
 
       - key: OTP_EXPIRES_MINUTES
