@@ -236,7 +236,19 @@ async function requestPasswordReset(req, res, next) {
         { _id: resetUser._id, passwordResetCodeHash: codeHash },
         { $set: clearResetAuthorization() },
       );
-      console.error('[auth] password reset email delivery failed:', error?.code || error?.name || 'unknown error');
+      // Server-side only: log the real SMTP failure so the host log shows the
+      // cause (e.g. ETIMEDOUT/ECONNECTION from a blocked port, or EAUTH from a
+      // rejected app password). The HTTP response stays generic regardless, so
+      // it never reveals whether this address has an account.
+      const reason = [
+        error?.code,
+        error?.command,
+        error?.responseCode,
+        error?.message,
+      ].filter(Boolean).join(' | ') || 'unknown error';
+      console.error(
+        `[auth] password reset email delivery failed via ${config.email.smtp.host}:${config.email.smtp.port}: ${reason}`,
+      );
     }
 
     return genericResetResponse(res);

@@ -3,12 +3,25 @@ const config = require('../config/env');
 
 let transporter;
 
+// Without explicit timeouts a blocked/hanging SMTP port keeps sendMail pending
+// for nodemailer's multi-minute defaults before it fails, so the reset request
+// stalls and the real cause is hard to see. Fail fast so the actual error is
+// logged promptly (see the controller's catch block).
+const SMTP_TIMEOUT_MS = 10000;
+
 function getTransporter() {
   if (!config.email.configured) {
     throw new Error('SMTP email delivery is not configured.');
   }
 
-  if (!transporter) transporter = nodemailer.createTransport(config.email.smtp);
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      ...config.email.smtp,
+      connectionTimeout: SMTP_TIMEOUT_MS,
+      greetingTimeout: SMTP_TIMEOUT_MS,
+      socketTimeout: SMTP_TIMEOUT_MS,
+    });
+  }
   return transporter;
 }
 
