@@ -1,8 +1,18 @@
 /* ==========================================================================
-   ANIMATED NEBULA BACKGROUND
-   A handful of large blurred blobs, drifting slowly. Everything here is
-   transform/opacity only, so it stays on the compositor and never triggers
-   layout. `pointer-events: none` guarantees it can never block a button.
+   NORTHSTAR — PREMIUM FUTURISTIC BACKGROUND
+   --------------------------------------------------------------------------
+   A layered atmosphere that sits behind the whole app:
+
+     1. .nebula        deep midnight-navy → rich-black base with ambient blooms
+     2. .nebula-grid   fine digital grid that drifts almost imperceptibly
+     3. .aurora        huge blurred cyan / blue / violet light fields
+     4. .cloud         soft ambient glow orbs drifting slowly
+     5. .beam          a couple of elegant light trails
+     6. .particles     tiny glowing motes
+
+   Everything is fixed, transform/opacity only (compositor friendly), and
+   `pointer-events: none` so it can never intercept a click. Colours are kept
+   in the background layer so foreground glass and text stay perfectly sharp.
    ========================================================================== */
 
 .nebula {
@@ -11,108 +21,280 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  /* Establish the dark gradient behind the blobs. */
+  /* Deep midnight navy blended into rich black, with ambient colour blooms. */
   background:
-    radial-gradient(ellipse 120% 80% at 50% -10%, #131a44 0%, transparent 60%),
-    radial-gradient(ellipse 90% 60% at 90% 10%, #1a1240 0%, transparent 55%),
-    linear-gradient(175deg, var(--bg-1) 0%, var(--bg-0) 45%, #04050c 100%);
+    radial-gradient(ellipse 120% 82% at 50% -16%, rgba(0, 207, 255, 0.2), transparent 60%),
+    radial-gradient(ellipse 90% 62% at 88% 6%, rgba(124, 58, 237, 0.24), transparent 56%),
+    radial-gradient(ellipse 80% 60% at 6% 26%, rgba(59, 130, 246, 0.16), transparent 60%),
+    radial-gradient(ellipse 70% 55% at 74% 92%, rgba(147, 51, 234, 0.16), transparent 60%),
+    linear-gradient(180deg, #050816 0%, #040610 48%, #03040a 100%);
 }
 
-/* Fine grain + a faint starfield, both static so they cost nothing. */
+/* Static fine grain + a sparse starfield. Cheap because nothing animates it. */
 .nebula::after {
   content: '';
   position: absolute;
   inset: 0;
-  opacity: 0.5;
+  opacity: 0.45;
   background-image:
     radial-gradient(1.4px 1.4px at 12% 22%, rgba(255, 255, 255, 0.55), transparent),
     radial-gradient(1.2px 1.2px at 78% 14%, rgba(255, 255, 255, 0.45), transparent),
-    radial-gradient(1.6px 1.6px at 34% 68%, rgba(190, 220, 255, 0.4), transparent),
+    radial-gradient(1.6px 1.6px at 34% 68%, rgba(190, 220, 255, 0.42), transparent),
     radial-gradient(1.2px 1.2px at 64% 82%, rgba(255, 255, 255, 0.35), transparent),
-    radial-gradient(1.3px 1.3px at 88% 58%, rgba(200, 190, 255, 0.4), transparent),
+    radial-gradient(1.3px 1.3px at 88% 58%, rgba(200, 190, 255, 0.42), transparent),
     radial-gradient(1.1px 1.1px at 8% 78%, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(1.5px 1.5px at 46% 12%, rgba(255, 255, 255, 0.4), transparent);
+    radial-gradient(1.5px 1.5px at 46% 12%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.2px 1.2px at 26% 46%, rgba(173, 216, 255, 0.35), transparent),
+    radial-gradient(1.3px 1.3px at 92% 34%, rgba(216, 180, 254, 0.35), transparent);
 }
 
-/* --- .cloud — the drifting blur blobs ------------------------------------ */
+/* --- 2. Fine digital grid, drifting one cell at a time -------------------- */
+
+.nebula-grid {
+  position: absolute;
+  /* Overscan so the drift never reveals an edge. */
+  inset: -12%;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(126, 162, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(126, 162, 255, 0.09) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 32%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 78% 68% at 50% 32%, #000 0%, transparent 78%);
+  animation: gridDrift 26s linear infinite;
+  will-change: transform;
+}
+
+@keyframes gridDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-64px, -64px, 0);
+  }
+}
+
+/* --- 3. Aurora — huge, slow, blurred colour fields ------------------------ */
+
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.aurora--1 {
+  width: 78vmax;
+  height: 70vmax;
+  top: -30vmax;
+  left: -14vmax;
+  opacity: 0.55;
+  background:
+    radial-gradient(circle at 42% 42%, rgba(0, 207, 255, 0.6), transparent 62%),
+    radial-gradient(circle at 68% 58%, rgba(59, 130, 246, 0.42), transparent 66%);
+  animation: auroraDrift1 30s ease-in-out infinite alternate;
+}
+
+.aurora--2 {
+  width: 66vmax;
+  height: 62vmax;
+  bottom: -28vmax;
+  right: -16vmax;
+  opacity: 0.5;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.55), transparent 64%),
+    radial-gradient(circle at 32% 68%, rgba(147, 51, 234, 0.42), transparent 66%);
+  animation: auroraDrift2 36s ease-in-out infinite alternate;
+}
+
+@keyframes auroraDrift1 {
+  from {
+    transform: translate3d(-4%, -3%, 0) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translate3d(8%, 6%, 0) scale(1.14) rotate(8deg);
+  }
+}
+
+@keyframes auroraDrift2 {
+  from {
+    transform: translate3d(4%, 4%, 0) scale(1.06) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-7%, -5%, 0) scale(1) rotate(-7deg);
+  }
+}
+
+/* A softer, centred colour field that flows behind the hero and feature band. */
+.aurora--3 {
+  width: 62vmax;
+  height: 46vmax;
+  top: 22%;
+  left: 50%;
+  margin-left: -31vmax;
+  opacity: 0.4;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.5), transparent 62%),
+    radial-gradient(ellipse at 38% 62%, rgba(59, 130, 246, 0.35), transparent 66%),
+    radial-gradient(ellipse at 64% 40%, rgba(147, 51, 234, 0.32), transparent 64%);
+  animation: auroraWave 26s ease-in-out infinite alternate;
+}
+
+@keyframes auroraWave {
+  from {
+    transform: translate3d(-6%, -2%, 0) scale(1) rotate(-4deg);
+  }
+  to {
+    transform: translate3d(6%, 3%, 0) scale(1.1) rotate(4deg);
+  }
+}
+
+/* --- 4. Ambient glow orbs — the drifting light hugs the page -------------- */
 
 .cloud {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.15;
+  filter: blur(78px);
+  opacity: 0.3;
   pointer-events: none;
-  will-change: transform;
-  /* Alternate direction with a long, calm period. */
-  animation: cloudFloat 22s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+  /* Cyan orbs drift side to side; violet orbs float up and down. */
+  animation: driftX 24s ease-in-out infinite alternate;
 }
 
-/* Distinct hues and paths so the nebula never looks like a loop. */
+/* Distinct hues, axes and timings so the atmosphere never looks like a loop. */
 .cloud--1 {
-  width: 460px;
-  height: 460px;
-  top: -8%;
+  width: 520px;
+  height: 520px;
+  top: -10%;
   left: -6%;
-  background: radial-gradient(circle, #38bdf8 0%, rgba(56, 189, 248, 0) 70%);
-  animation-duration: 22s;
+  background: radial-gradient(circle, #00cfff 0%, rgba(0, 207, 255, 0) 70%);
+  animation: driftX 24s ease-in-out infinite alternate;
+  animation-delay: -4s;
 }
 
 .cloud--2 {
-  width: 400px;
-  height: 400px;
-  top: 18%;
+  width: 460px;
+  height: 460px;
+  top: 16%;
   right: -8%;
-  background: radial-gradient(circle, #a855f7 0%, rgba(168, 85, 247, 0) 70%);
-  animation-duration: 27s;
+  background: radial-gradient(circle, #7c3aed 0%, rgba(124, 58, 237, 0) 70%);
+  animation: driftY 28s ease-in-out infinite alternate;
   animation-delay: -6s;
 }
 
 .cloud--3 {
-  width: 520px;
-  height: 520px;
-  bottom: -14%;
-  left: 22%;
+  width: 560px;
+  height: 560px;
+  bottom: -16%;
+  left: 20%;
   background: radial-gradient(circle, #22d3ee 0%, rgba(34, 211, 238, 0) 72%);
-  animation-duration: 31s;
+  animation: driftX 32s ease-in-out infinite alternate;
   animation-delay: -12s;
 }
 
 .cloud--4 {
-  width: 340px;
-  height: 340px;
-  top: 52%;
-  left: 4%;
-  background: radial-gradient(circle, #818cf8 0%, rgba(129, 140, 248, 0) 70%);
-  animation-duration: 25s;
+  width: 400px;
+  height: 400px;
+  top: 50%;
+  left: 3%;
+  background: radial-gradient(circle, #3b82f6 0%, rgba(59, 130, 246, 0) 70%);
+  animation: driftY 22s ease-in-out infinite alternate;
   animation-delay: -18s;
 }
 
 .cloud--5 {
-  width: 380px;
-  height: 380px;
-  bottom: 6%;
-  right: 12%;
-  background: radial-gradient(circle, #ffffff 0%, rgba(255, 255, 255, 0) 70%);
-  opacity: 0.075;
-  animation-duration: 29s;
+  width: 440px;
+  height: 440px;
+  bottom: 4%;
+  right: 10%;
+  background: radial-gradient(circle, #9333ea 0%, rgba(147, 51, 234, 0) 70%);
+  opacity: 0.22;
+  animation: driftY 30s ease-in-out infinite alternate;
   animation-delay: -9s;
 }
 
-@keyframes cloudFloat {
+/* Side-to-side with a gentle scale for depth. */
+@keyframes driftX {
   from {
-    transform: translate3d(-20px, -10px, 0) scale(1);
+    transform: translate3d(-34px, 0, 0) scale(1);
   }
   to {
-    transform: translate3d(40px, 30px, 0) scale(1.08);
+    transform: translate3d(46px, 0, 0) scale(1.12);
   }
 }
 
-/* Alternate direction for even-indexed blobs. */
+/* Up-and-down with a gentle scale for depth. */
+@keyframes driftY {
+  from {
+    transform: translate3d(0, -36px, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(0, 42px, 0) scale(1);
+  }
+}
+
+/* Alternate direction for even-indexed orbs, so nothing marches together. */
 .cloud--even {
   animation-direction: alternate-reverse;
 }
 
-/* --- Floating particles -------------------------------------------------- */
+/* --- 5. Light trails — thin, elegant streaks ------------------------------ */
+
+.beam {
+  position: absolute;
+  width: 1px;
+  height: 60vmax;
+  top: -20vmax;
+  pointer-events: none;
+  border-radius: 999px;
+  opacity: 0.3;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 207, 255, 0.55) 35%,
+    rgba(124, 58, 237, 0.4) 60%,
+    transparent 100%
+  );
+  animation: beamPulse 12s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.beam--1 {
+  left: 18%;
+  transform: rotate(24deg);
+  animation-delay: -2s;
+}
+
+.beam--2 {
+  left: 52%;
+  height: 52vmax;
+  opacity: 0.2;
+  transform: rotate(20deg);
+  animation-delay: -6s;
+}
+
+.beam--3 {
+  right: 16%;
+  height: 56vmax;
+  opacity: 0.24;
+  transform: rotate(-22deg);
+  animation-delay: -9s;
+}
+
+@keyframes beamPulse {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.34;
+  }
+}
+
+/* --- 6. Floating particles ----------------------------------------------- */
 
 .particles {
   position: absolute;
@@ -127,7 +309,7 @@
   height: var(--size, 3px);
   border-radius: 50%;
   background: var(--tint, rgba(190, 225, 255, 0.9));
-  box-shadow: 0 0 10px 1px var(--tint, rgba(56, 189, 248, 0.6));
+  box-shadow: 0 0 10px 1px var(--tint, rgba(0, 207, 255, 0.6));
   opacity: 0;
   animation: particleDrift var(--dur, 18s) linear var(--delay, 0s) infinite;
   will-change: transform, opacity;
@@ -154,36 +336,65 @@
 
 @media (max-width: 768px) {
   .cloud {
-    filter: blur(60px);
-    opacity: 0.11;
+    filter: blur(58px);
+    opacity: 0.24;
   }
 
-  .cloud--1 { width: 320px; height: 320px; }
-  .cloud--2 { width: 280px; height: 280px; }
-  .cloud--3 { width: 340px; height: 340px; }
+  .aurora {
+    filter: blur(64px);
+    opacity: 0.42;
+  }
+
+  .nebula-grid {
+    opacity: 0.36;
+    background-size: 52px 52px;
+  }
+
+  .beam--2 {
+    display: none;
+  }
+
+  .cloud--1 { width: 340px; height: 340px; }
+  .cloud--2 { width: 300px; height: 300px; }
+  .cloud--3 { width: 360px; height: 360px; }
   .cloud--4 { display: none; }
   .cloud--5 { display: none; }
 }
 
 @media (max-width: 480px) {
-  /* Blur is the most expensive thing on the page — cut it hard here. */
+  /* Blur is the most expensive thing here — cut it hard on phones. */
   .cloud {
-    filter: blur(48px);
-    opacity: 0.09;
+    filter: blur(46px);
+    opacity: 0.2;
   }
 
-  .cloud--1 { width: 240px; height: 240px; }
-  .cloud--2 { width: 220px; height: 220px; }
-  .cloud--3 { width: 260px; height: 260px; }
+  .aurora {
+    filter: blur(50px);
+  }
+
+  .beam {
+    display: none;
+  }
+
+  .cloud--1 { width: 250px; height: 250px; }
+  .cloud--2 { width: 230px; height: 230px; }
+  .cloud--3 { width: 270px; height: 270px; }
 }
 
+/* --- Respect reduced-motion: keep the atmosphere, drop the movement ------- */
+
 @media (prefers-reduced-motion: reduce) {
+  .nebula-grid,
+  .aurora,
   .cloud,
+  .beam,
   .particle {
     animation: none !important;
   }
 
-  /* Keep the tint so the background is not flat, just still. */
-  .cloud { opacity: 0.1; }
+  /* Keep the colour so the background is rich, just still. */
+  .aurora { opacity: 0.45; }
+  .cloud { opacity: 0.24; }
+  .beam { opacity: 0.16; }
   .particle { display: none; }
 }
