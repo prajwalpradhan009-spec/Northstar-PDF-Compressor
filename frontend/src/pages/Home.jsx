@@ -1,49 +1,64 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
 import {
-  Archive, CheckCircle2, FileImage, FileText, Gauge, Layers, Lock, Plus,
-  ShieldCheck, Sparkle, Star, Upload, Zap,
+  Archive, ArrowRight, Check, CheckCircle2, CloudUpload, Download, FileImage,
+  FileText, Gauge, Layers, Lock, Minus, Plus, RotateCw, Scan, Scissors,
+  ShieldCheck, Sliders, Sparkle, Star, Type, Upload, Wrench, Zap,
 } from '../components/icons';
 
-const FEATURES = [
+const TOOLKIT_ITEMS = [
   {
-    icon: Layers,
-    title: 'Merge PDFs in any order',
-    text: 'Drop in as many files as you like, drag them into the sequence you want, and download one clean document.',
+    icon: Scissors,
+    name: 'PDF Split',
+    desc: 'Extract specific page ranges or break large documents into individual standalone files.',
   },
   {
-    icon: Gauge,
-    title: 'Server-side image compression',
-    text: 'Sharp does the work — real savings at a quality you choose, with optional resizing to exact pixel targets.',
+    icon: Sliders,
+    name: 'Organize & Reorder',
+    desc: 'Sort, resequence, or delete pages before finalizing your combined master document.',
+  },
+  {
+    icon: RotateCw,
+    name: 'Rotate PDF',
+    desc: 'Instantly rotate portrait and landscape pages by 90, 180, or 270 degrees in batch.',
+  },
+  {
+    icon: Layers,
+    name: 'Extract Pages',
+    desc: 'Select and export only the relevant chapters, tables, or sheets you need.',
   },
   {
     icon: FileImage,
-    title: 'JPG, PNG and WEBP',
-    text: 'Keep the original format or convert between them. Transparent PNGs are flattened safely when you pick JPEG.',
+    name: 'PDF to Image',
+    desc: 'Render high-resolution vector PDF pages into crisp PNG, JPEG, or WebP graphics.',
   },
   {
-    icon: Archive,
-    title: 'Download everything at once',
-    text: 'Compress a batch and take home a single ZIP, or download each image one by one.',
+    icon: FileText,
+    name: 'Image to PDF',
+    desc: 'Compile photos, documents, and paper scans into an elegant, standardized PDF portfolio.',
+  },
+  {
+    icon: Type,
+    name: 'PDF to Text',
+    desc: 'Extract clean selectable plaintext from document pages without formatting artifacts.',
+  },
+  {
+    icon: Scan,
+    name: 'OCR Scanner',
+    desc: 'Machine-learning optical character recognition for scanned receipts and paper archives.',
   },
   {
     icon: ShieldCheck,
-    title: 'Real file validation',
-    text: 'Every upload is checked against its actual bytes, not its filename. Oversized or malformed files are rejected.',
+    name: 'Watermark PDF',
+    desc: 'Stamp confidential banners, company watermarks, or page number stamps securely.',
   },
   {
     icon: Lock,
-    title: 'Sessions in HttpOnly cookies',
-    text: 'Your auth token is never readable by JavaScript, so it cannot be stolen by a page script.',
+    name: 'Protect PDF',
+    desc: 'Add 256-bit AES encryption with password protection against unauthorized viewing.',
   },
-];
-
-const STEPS = [
-  { title: 'Add your files', text: 'Drag them into the glass panel or pick them from your device. Nothing is stored on our servers.' },
-  { title: 'Choose your settings', text: 'For images, dial in quality, output format and maximum dimensions with instant preview feedback.' },
-  { title: 'Process & download', text: 'The server does the heavy lifting and hands the finished file straight back to your browser.' },
 ];
 
 const FAQS = [
@@ -78,7 +93,7 @@ function FaqItem({ item, open, onToggle, index }) {
   const panelId = `faq-panel-${index}`;
 
   return (
-    <Reveal as="div" className={`glass glass-card faq-item${open ? ' open' : ''}`} delay={index * 40}>
+    <Reveal as="div" className={`faq-item${open ? ' open' : ''}`} delay={index * 35}>
       <h3 style={{ margin: 0 }}>
         <button
           type="button"
@@ -89,8 +104,8 @@ function FaqItem({ item, open, onToggle, index }) {
           onClick={onToggle}
         >
           <span>{item.q}</span>
-          <span className="faq-icon" aria-hidden="true">
-            <Plus style={{ width: 18, height: 18 }} />
+          <span className="faq-toggle-icon" aria-hidden="true">
+            {open ? <Minus style={{ width: 18, height: 18 }} /> : <Plus style={{ width: 18, height: 18 }} />}
           </span>
         </button>
       </h3>
@@ -104,165 +119,408 @@ function FaqItem({ item, open, onToggle, index }) {
 }
 
 export default function Home() {
+  // First FAQ item expanded by default as requested in prompt and matching reference image
   const [openFaq, setOpenFaq] = useState(0);
   const { isAuthenticated } = useAuth();
 
   return (
-    <>
-      {/* ---------------------------------------------------------------- *
-       * HERO
-       * ---------------------------------------------------------------- */}
-      <section className="page page--top" aria-labelledby="hero-title">
-        <div className="hero">
-          {/* Floating PDF + image icons around the hero copy. */}
-          <div className="hero-orbit" aria-hidden="true">
-            <span className="orbit orbit--1"><FileText /></span>
-            <span className="orbit orbit--2"><FileImage /></span>
-            <span className="orbit orbit--3"><Layers /></span>
-            <span className="orbit orbit--4"><Gauge /></span>
-            <span className="orbit orbit--5"><Sparkle /></span>
-            <span className="orbit orbit--6"><Zap /></span>
-          </div>
-
-          <p className="eyebrow">
-            <Star style={{ width: 12, height: 12, display: 'inline', verticalAlign: '-1px' }} /> NorthStar
-          </p>
-
-          <h1 id="hero-title">
-            <span className="glow-text">NorthStar</span>
-            <span className="line-2">PDF &amp; Image Tools</span>
-          </h1>
-
-          <p className="hero-sub">
-            Merge PDFs and compress images quickly with a secure, modern workspace.
-          </p>
-
-          <div className="hero-actions">
-            <Link className="glass-button glass-button--lg" to="/pdf-merger">
-              <Layers />
-              Merge PDFs
-            </Link>
-            <Link className="glass-button glass-button--ghost glass-button--lg" to="/image-compressor">
-              <FileImage />
-              Compress Images
-            </Link>
-          </div>
-
-          <ul className="hero-points">
-            <li><CheckCircle2 style={{ width: 15, height: 15 }} /> No install, no queue</li>
-            <li><ShieldCheck style={{ width: 15, height: 15 }} /> Files never stored</li>
-            <li><Zap style={{ width: 15, height: 15 }} /> Server-side processing</li>
-            {isAuthenticated
-              ? <li><CheckCircle2 style={{ width: 15, height: 15 }} /> Signed in</li>
-              : <li><Lock style={{ width: 15, height: 15 }} /> Free account required</li>}
-          </ul>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- *
-       * FEATURES
-       * ---------------------------------------------------------------- */}
-      <section className="page section" id="features" aria-labelledby="features-title">
-        <Reveal className="section-head">
-          <p className="eyebrow">Features</p>
-          <h2 className="section-title" id="features-title">
-            Everything you need, nothing you don&apos;t
-          </h2>
-          <p className="section-sub">
-            Two focused tools that do one job each and do it properly — backed by real validation,
-            real accounts, and a UI that stays fast.
-          </p>
-        </Reveal>
-
-        <div className="grid grid-3">
-          {FEATURES.map((feature, index) => (
-            <Reveal key={feature.title} className="glass-card feature-card" delay={index * 60}>
-              <span className="feature-icon" aria-hidden="true">
-                <feature.icon />
-              </span>
-              <h3 className="feature-title">{feature.title}</h3>
-              <p className="feature-text">{feature.text}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- *
-       * HOW IT WORKS
-       * ---------------------------------------------------------------- */}
-      <section className="page section" id="how-it-works" aria-labelledby="how-title">
-        <Reveal className="section-head">
-          <p className="eyebrow">How It Works</p>
-          <h2 className="section-title" id="how-title">
-            Three steps, about twenty seconds
-          </h2>
-          <p className="section-sub">
-            No configuration, no manual conversion settings to get wrong.
-          </p>
-        </Reveal>
-
-        <div className="grid grid-3">
-          {STEPS.map((step, index) => (
-            <Reveal key={step.title} className="glass glass-card step" delay={index * 90}>
-              <span className="step-num" aria-hidden="true">{index + 1}</span>
-              <h3 className="step-title">{step.title}</h3>
-              <p className="step-text">{step.text}</p>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- *
-       * FAQ
-       * ---------------------------------------------------------------- */}
-      <section className="page section" id="faq" aria-labelledby="faq-title">
-        <Reveal className="section-head">
-          <p className="eyebrow">FAQ</p>
-          <h2 className="section-title" id="faq-title">
-            Questions, answered
-          </h2>
-          <p className="section-sub">
-            The things people usually want to know about privacy, limits and accounts.
-          </p>
-        </Reveal>
-
-        <div style={{ maxWidth: 780, margin: '0 auto' }}>
-          {FAQS.map((item, index) => (
-            <FaqItem
-              key={item.q}
-              item={item}
-              index={index}
-              open={openFaq === index}
-              onToggle={() => setOpenFaq(openFaq === index ? -1 : index)}
+    <div className="cinematic-home">
+      {/* ==================================================================== *
+       * SECTION 01 — MIDNIGHT GALAXY HERO
+       * ==================================================================== */}
+      <section className="theme-galaxy" aria-labelledby="galaxy-hero-title">
+        {/* Layered mountain silhouettes at bottom */}
+        <div className="galaxy-mountains" aria-hidden="true">
+          <svg viewBox="0 0 1440 280" fill="none" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+            <path
+              d="M0 280L0 190L120 150L260 210L420 130L600 230L780 140L940 200L1120 120L1300 210L1440 160L1440 280Z"
+              fill="#061126"
+              fillOpacity="0.8"
             />
-          ))}
+            <path
+              d="M0 280L0 230L160 180L320 240L500 170L700 250L880 180L1080 230L1260 170L1440 220L1440 280Z"
+              fill="#06110C"
+            />
+          </svg>
+        </div>
+
+        <div className="galaxy-content">
+          <Reveal>
+            <div className="eyebrow-galaxy">
+              <span>&#9699;</span>
+              <span>NORTHSTAR / DIGITAL DOCUMENT TOOLS</span>
+            </div>
+          </Reveal>
+
+          <Reveal delay={60}>
+            <h1 className="galaxy-headline" id="galaxy-hero-title">
+              <span className="line-1">YOUR FILES.</span>
+              <span className="line-2">YOUR FLOW.</span>
+              <span className="line-3">REIMAGINED.</span>
+            </h1>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <p className="galaxy-sub">
+              Merge PDFs. Compress images. Move from file chaos to clarity.
+            </p>
+          </Reveal>
+
+          <Reveal delay={180}>
+            <div className="galaxy-actions">
+              <Link to="/pdf-merger" className="galaxy-btn-primary">
+                Merge PDFs &rarr;
+              </Link>
+              <Link to="/image-compressor" className="galaxy-btn-secondary">
+                Compress Images
+              </Link>
+            </div>
+          </Reveal>
+
+          <Reveal delay={240}>
+            <ul className="galaxy-trust">
+              <li>
+                <Zap style={{ width: 16, height: 16 }} />
+                <span>Fast Processing</span>
+              </li>
+              <li>
+                <ShieldCheck style={{ width: 16, height: 16 }} />
+                <span>Secure &amp; Private</span>
+              </li>
+              <li>
+                <Sparkle style={{ width: 16, height: 16 }} />
+                <span>No Installation</span>
+              </li>
+              <li>
+                {isAuthenticated ? (
+                  <>
+                    <CheckCircle2 style={{ width: 16, height: 16 }} />
+                    <span>Signed in</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock style={{ width: 16, height: 16 }} />
+                    <span>Free Account Required</span>
+                  </>
+                )}
+              </li>
+            </ul>
+          </Reveal>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- *
-       * CTA
-       * ---------------------------------------------------------------- */}
-      <section className="page section" aria-label="Get started">
-        <Reveal className="glass-panel cta-band">
-          <div>
-            <h2 className="cta-title">Start with a file</h2>
-            <p className="cta-text">
-              Create a free account, then add a PDF or a batch of images and get your result in seconds.
+      {/* ==================================================================== *
+       * SECTION 02 — FOREST LUXURY TOOLS
+       * ==================================================================== */}
+      <section className="theme-forest" id="toolkit" aria-labelledby="forest-title">
+        <div id="features" style={{ position: 'relative', top: '-40px' }} />
+        <div className="forest-container">
+          <Reveal className="forest-header">
+            <div className="eyebrow-forest">
+              <span>&#9699;</span>
+              <span>THE TOOLKIT</span>
+            </div>
+            <span className="forest-script">Work Smarter Not Harder</span>
+            <h2 className="forest-title" id="forest-title">
+              LESS FRICTION. <span className="line-done">MORE DONE.</span>
+            </h2>
+            <p className="forest-sub">
+              Powerful tools for your documents and images &mdash; all in one place.
             </p>
+          </Reveal>
+
+          {/* Two Large Hero Panels */}
+          <div className="forest-hero-grid">
+            {/* Merge PDFs Hero Panel */}
+            <Reveal className="forest-hero-card" delay={40}>
+              <div className="forest-badge-row">
+                <div className="forest-icon-pill">
+                  <Layers style={{ width: 26, height: 26 }} />
+                </div>
+                <span className="forest-tag">PRIMARY TOOL</span>
+              </div>
+              <h3 className="forest-card-title">Merge PDFs</h3>
+              <p className="forest-card-desc">
+                Combine multiple PDF documents in exact order. Sequence files intuitively with
+                drag-and-drop, and produce a unified file in seconds.
+              </p>
+              <ul className="forest-feature-list">
+                <li><Check style={{ width: 16, height: 16 }} /> Drag-and-drop sequence ordering</li>
+                <li><Check style={{ width: 16, height: 16 }} /> Lightning-fast in-memory processing</li>
+                <li><Check style={{ width: 16, height: 16 }} /> Up to 20 files &amp; 1000 combined pages</li>
+              </ul>
+              <Link to="/pdf-merger" className="forest-btn">
+                Open Merge Tool &rarr;
+              </Link>
+            </Reveal>
+
+            {/* Image Compression Hero Panel */}
+            <Reveal className="forest-hero-card" delay={100}>
+              <div className="forest-badge-row">
+                <div className="forest-icon-pill">
+                  <FileImage style={{ width: 26, height: 26 }} />
+                </div>
+                <span className="forest-tag">PRIMARY TOOL</span>
+              </div>
+              <h3 className="forest-card-title">Image Compression</h3>
+              <p className="forest-card-desc">
+                Lossy &amp; lossless batch compression powered by Sharp. Reduce file sizes up to 90%
+                while preserving maximum visual clarity.
+              </p>
+              <ul className="forest-feature-list">
+                <li><Check style={{ width: 16, height: 16 }} /> JPG, PNG, and modern WebP formats</li>
+                <li><Check style={{ width: 16, height: 16 }} /> Custom pixel dimension resizing</li>
+                <li><Check style={{ width: 16, height: 16 }} /> Individual downloads or batch ZIP archive</li>
+              </ul>
+              <Link to="/image-compressor" className="forest-btn">
+                Open Compressor &rarr;
+              </Link>
+            </Reveal>
           </div>
-          <div className="row" style={{ gap: 11 }}>
-            <Link className="glass-button" to="/pdf-merger">
-              <Upload style={{ width: 17, height: 17 }} />
-              Merge PDFs
-            </Link>
-            <Link className="glass-button glass-button--ghost" to="/image-compressor">
-              <FileImage style={{ width: 17, height: 17 }} />
-              Compress Images
-            </Link>
+
+          {/* Extended Toolkit Capabilities Grid */}
+          <div className="forest-toolkit-grid">
+            {TOOLKIT_ITEMS.map((tool, idx) => (
+              <Reveal key={tool.name} className="forest-tool-card" delay={140 + idx * 30}>
+                <div className="forest-tool-icon">
+                  <tool.icon style={{ width: 20, height: 20 }} />
+                </div>
+                <h4 className="forest-tool-name">{tool.name}</h4>
+                <p className="forest-tool-text">{tool.desc}</p>
+              </Reveal>
+            ))}
           </div>
-        </Reveal>
+        </div>
       </section>
-    </>
+
+      {/* ==================================================================== *
+       * SECTION 03 — EDITORIAL MINIMAL WORKFLOW
+       * Directly inspired by the reference image
+       * ==================================================================== */}
+      <section className="theme-workflow" id="how-it-works" aria-labelledby="workflow-title">
+        {/* Landscape Graphic: Craggy mountain peaks, crimson clouds, moon, and traveler */}
+        <div className="workflow-landscape" aria-hidden="true">
+          <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+            {/* Pale glowing moon in upper right */}
+            <circle cx="1280" cy="190" r="85" fill="#FFF4EC" fillOpacity="0.75" />
+            <circle cx="1280" cy="190" r="95" stroke="#FFE9DF" strokeWidth="1.5" strokeOpacity="0.4" />
+
+            {/* Left Mountain Crag */}
+            <path
+              d="M-40 900L-40 450L60 380L140 460L240 320L340 500L420 440L500 580L440 900Z"
+              fill="#18181C"
+            />
+            {/* Left Billowing Crimson Clouds */}
+            <path
+              d="M-30 620 C20 540, 100 520, 160 570 C220 500, 320 510, 350 590 C420 540, 520 600, 480 720 C540 800, 460 900, 360 900 L-40 900Z"
+              fill="#C8102E"
+              fillOpacity="0.94"
+            />
+            <path
+              d="M-20 700 C40 650, 120 660, 170 720 C230 670, 320 700, 340 780 C400 810, 380 900, 300 900 L-40 900Z"
+              fill="#E62746"
+              fillOpacity="0.85"
+            />
+
+            {/* Right Mountain Cliff with Precipice */}
+            <path
+              d="M1480 900L1480 340L1410 320L1350 360L1260 480L1180 440L1090 560L1020 660L1120 900Z"
+              fill="#18181C"
+            />
+            {/* Right Billowing Crimson Clouds */}
+            <path
+              d="M1000 900 C980 780, 1070 700, 1150 720 C1190 620, 1310 610, 1380 670 C1460 620, 1500 680, 1500 820 L1500 900Z"
+              fill="#C8102E"
+              fillOpacity="0.94"
+            />
+            <path
+              d="M1080 900 C1100 800, 1200 780, 1260 840 C1320 790, 1420 810, 1460 900Z"
+              fill="#A30D28"
+              fillOpacity="0.9"
+            />
+
+            {/* Tiny Lone Traveler Silhouette atop right cliff at (1410, 315) */}
+            <g transform="translate(1402, 290)">
+              {/* Head */}
+              <circle cx="6" cy="4" r="3" fill="#18181C" />
+              {/* Body */}
+              <path d="M4 7L8 7L9 22L3 22Z" fill="#18181C" />
+              {/* Flowing Red Cape */}
+              <path d="M4 7C-4 12, -8 18, -12 24C-7 24, 2 20, 4 15Z" fill="#C8102E" />
+            </g>
+          </svg>
+        </div>
+
+        <div className="workflow-container">
+          {/* Header Row */}
+          <div className="workflow-header-row">
+            <Reveal>
+              <div className="eyebrow-workflow">
+                <span>&#9699;</span>
+                <span>HOW IT WORKS</span>
+              </div>
+            </Reveal>
+
+            <Reveal delay={60}>
+              <div className="workflow-tag-right">
+                <div>SIMPLE</div>
+                <div>FAST</div>
+                <div>SECURE</div>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* Giant Editorial Serif Headline */}
+          <Reveal delay={80}>
+            <h2 className="workflow-headline" id="workflow-title">
+              <span className="line-dark">THREE STEPS.</span>
+              <span className="line-crimson">ZERO CHAOS.</span>
+            </h2>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <p className="workflow-sub">
+              Get your work done in just three simple steps. No complicated process. No confusion.
+            </p>
+            <div className="workflow-accent-dash" />
+          </Reveal>
+
+          {/* 3 Step Columns with Hairline Dividers */}
+          <div className="workflow-steps-grid">
+            {/* Step 01 */}
+            <Reveal className="workflow-step-col" delay={140}>
+              <div className="step-top-row">
+                <span className="step-big-num">01</span>
+                <span className="step-crimson-badge">
+                  <CloudUpload style={{ width: 24, height: 24 }} />
+                </span>
+              </div>
+              <h3 className="step-col-title">ADD YOUR FILES</h3>
+              <p className="step-col-desc">
+                Upload files using the existing file selection or drag-and-drop functionality.
+              </p>
+              <div className="step-col-dash" />
+            </Reveal>
+
+            <div className="workflow-v-divider" />
+
+            {/* Step 02 */}
+            <Reveal className="workflow-step-col" delay={200}>
+              <div className="step-top-row">
+                <span className="step-big-num">02</span>
+                <span className="step-crimson-badge">
+                  <Wrench style={{ width: 24, height: 24 }} />
+                </span>
+              </div>
+              <h3 className="step-col-title">CHOOSE YOUR TOOL</h3>
+              <p className="step-col-desc">
+                Use the existing settings and controls for the selected operation.
+              </p>
+              <div className="step-col-dash" />
+            </Reveal>
+
+            <div className="workflow-v-divider" />
+
+            {/* Step 03 */}
+            <Reveal className="workflow-step-col" delay={260}>
+              <div className="step-top-row">
+                <span className="step-big-num">03</span>
+                <span className="step-crimson-badge">
+                  <Download style={{ width: 24, height: 24 }} />
+                </span>
+              </div>
+              <h3 className="step-col-title">PROCESS AND DOWNLOAD</h3>
+              <p className="step-col-desc">
+                The real backend processing creates your file and you can download it instantly.
+              </p>
+              <div className="step-col-dash" />
+            </Reveal>
+          </div>
+
+          {/* Scroll Down Indicator */}
+          <div className="workflow-scroll-down" aria-hidden="true">
+            <span>SCROLL DOWN</span>
+            <div className="scroll-line-drop" />
+          </div>
+        </div>
+      </section>
+
+      {/* ==================================================================== *
+       * SECTION 04 — DARK CINEMATIC FAQ
+       * Directly inspired by the reference image bottom section
+       * ==================================================================== */}
+      <section className="theme-cinematic-faq" id="faq" aria-labelledby="faq-title">
+        <div className="faq-cinematic-glow" aria-hidden="true" />
+
+        <div className="faq-cinematic-grid">
+          {/* Left Column: Heading and Editorial Typography */}
+          <div className="faq-cinematic-left">
+            <Reveal>
+              <div className="eyebrow-faq">
+                <span>&#9699;</span>
+                <span>GOOD TO KNOW</span>
+              </div>
+            </Reveal>
+
+            <Reveal delay={60}>
+              <h2 className="faq-cinematic-title" id="faq-title">
+                <span className="line-white">CLARITY.</span>
+                <span className="line-crimson">WITHOUT COMPROMISE.</span>
+              </h2>
+            </Reveal>
+
+            <Reveal delay={120}>
+              <p className="faq-cinematic-desc">
+                Quick answers to common questions. If you need more help, we&apos;re always here.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Right Column: Accordion Panels */}
+          <div className="faq-cinematic-right">
+            <div className="faq-list">
+              {FAQS.map((item, index) => (
+                <FaqItem
+                  key={item.q}
+                  item={item}
+                  index={index}
+                  open={openFaq === index}
+                  onToggle={() => setOpenFaq(openFaq === index ? -1 : index)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================================================================== *
+       * SECTION 05 — CINEMATIC BOTTOM CTA
+       * ==================================================================== */}
+      <section className="theme-cinematic-cta" aria-label="Get started">
+        <div className="cinematic-cta-inner">
+          <Reveal>
+            <h2 className="cinematic-cta-title">
+              Ready to streamline your documents?
+            </h2>
+          </Reveal>
+          <Reveal delay={60}>
+            <p className="cinematic-cta-sub">
+              Merge PDFs and optimize images with zero software install, strict privacy,
+              and instant server processing.
+            </p>
+          </Reveal>
+          <Reveal delay={120}>
+            <div className="galaxy-actions" style={{ marginBottom: 0 }}>
+              <Link to="/pdf-merger" className="galaxy-btn-primary">
+                Merge PDFs &rarr;
+              </Link>
+              <Link to="/image-compressor" className="galaxy-btn-secondary">
+                Compress Images
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    </div>
   );
 }
-

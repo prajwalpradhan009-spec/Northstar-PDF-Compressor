@@ -280,3 +280,83 @@ export const Clock = (p) => (
     <path d="M12 7v5.2l3.2 2" />
   </Svg>
 );
+
+export const Minus = (p) => (
+  <Svg {...p}>
+    <path d="M5 12h14" />
+  </Svg>
+);
+
+export const Sun = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </Svg>
+);
+
+export const Wrench = (p) => (
+  <Svg {...p}>
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+  </Svg>
+);
+
+export const CloudUpload = (p) => (
+  <Svg {...p}>
+    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+    <path d="M12 12v9" />
+    <path d="m8 16 4-4 4 4" />
+  </Svg>
+);
+
+export const Scissors = (p) => (
+  <Svg {...p}>
+    <circle cx="6" cy="6" r="3" />
+    <path d="M8.12 8.12 12 12m0 0 3.88 3.88M12 12l3.88-3.88M8.12 15.88 12 12" />
+    <circle cx="6" cy="18" r="3" />
+    <path d="M14.8 14.8 20 20M14.8 9.2 20 4" />
+  </Svg>
+);
+
+export const RotateCw = (p) => (
+  <Svg {...p}>
+    <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.85.83 6.72 2.24L21 8" />
+    <path d="M21 3v5h-5" />
+  </Svg>
+);
+
+export const Sliders = (p) => (
+  <Svg {...p}>
+    <line x1="4" x2="4" y1="21" y2="14" />
+    <line x1="4" x2="4" y1="10" y2="3" />
+    <line x1="12" x2="12" y1="21" y2="12" />
+    <line x1="12" x2="12" y1="8" y2="3" />
+    <line x1="20" x2="20" y1="21" y2="16" />
+    <line x1="20" x2="20" y1="12" y2="3" />
+    <line x1="1" x2="7" y1="14" y2="14" />
+    <line x1="9" x2="15" y1="8" y2="8" />
+    <line x1="17" x2="23" y1="16" y2="16" />
+  </Svg>
+);
+
+export const Type = (p) => (
+  <Svg {...p}>
+    <polyline points="4 7 4 4 20 4 20 7" />
+    <line x1="9" x2="15" y1="20" y2="20" />
+    <line x1="12" x2="12" y1="4" y2="20" />
+  </Svg>
+);
+
+export const Scan = (p) => (
+  <Svg {...p}>
+    <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" />
+    <line x1="7" x2="17" y1="12" y2="12" />
+  </Svg>
+);
+
+export const Compass = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="10" />
+    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+  </Svg>
+);
+

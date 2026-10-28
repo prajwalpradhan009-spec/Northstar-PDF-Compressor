@@ -29,6 +29,17 @@ function loadEnvFiles() {
 const dotenv = require('dotenv');
 const envFile = loadEnvFiles();
 
+// On systems where local DNS rejects MongoDB Atlas SRV lookups (querySrv ECONNREFUSED):
+const dns = require('dns');
+if (process.env.MONGODB_URI && process.env.MONGODB_URI.includes('+srv')) {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (err) {
+    // Keep system default resolver if custom DNS cannot be set
+  }
+}
+
+
 /** Values that must never reach production — caught at boot, not at first request. */
 const PLACEHOLDERS = new Set([
   'replace_with_a_long_random_secret',

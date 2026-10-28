@@ -4,18 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { initials } from '../lib/format';
 import {
-  FileImage, FileText, HelpCircle, LayoutDashboard, LogOut, Menu, Settings,
-  Sparkle, Star, User, X, Zap,
+  ChevronDown, FileImage, FileText, HelpCircle, LayoutDashboard, LogOut, Menu,
+  RotateCw, Scissors, Settings, ShieldCheck, Sparkle, Star, Sun, User, X, Zap,
 } from './icons';
-
-const PUBLIC_LINKS = [
-  { to: '/', label: 'Home', end: true, icon: Star },
-  { to: '/pdf-merger', label: 'PDF Merger', icon: FileText },
-  { to: '/image-compressor', label: 'Image Compressor', icon: FileImage },
-  { to: '/#features', label: 'Features', icon: Sparkle, hash: true },
-  { to: '/#how-it-works', label: 'How It Works', icon: Zap, hash: true },
-  { to: '/#faq', label: 'FAQ', icon: HelpCircle, hash: true },
-];
 
 export default function Navbar() {
   const { user, isAuthenticated, loading, logout } = useAuth();
@@ -24,20 +15,26 @@ export default function Navbar() {
   const location = useLocation();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
+  const [imageMenuOpen, setImageMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
-  const dropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
+  const pdfDropdownRef = useRef(null);
+  const imageDropdownRef = useRef(null);
   const lastScroll = useRef(0);
 
-  // Close the mobile sheet and dropdown whenever the route changes.
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
-    setDropdownOpen(false);
+    setUserDropdownOpen(false);
+    setPdfMenuOpen(false);
+    setImageMenuOpen(false);
   }, [location.pathname, location.hash]);
 
-  // Hide the bar on scroll-down, bring it back on scroll-up.
+  // Hide on scroll-down, reveal on scroll-up
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
@@ -49,14 +46,26 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Dismiss the dropdown on an outside click or Escape.
+  // Dismiss dropdowns on outside click or Escape
   useEffect(() => {
-    if (!dropdownOpen) return undefined;
     const onPointerDown = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setDropdownOpen(false);
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+      if (pdfDropdownRef.current && !pdfDropdownRef.current.contains(event.target)) {
+        setPdfMenuOpen(false);
+      }
+      if (imageDropdownRef.current && !imageDropdownRef.current.contains(event.target)) {
+        setImageMenuOpen(false);
+      }
     };
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') setDropdownOpen(false);
+      if (event.key === 'Escape') {
+        setUserDropdownOpen(false);
+        setPdfMenuOpen(false);
+        setImageMenuOpen(false);
+        setMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
@@ -64,7 +73,7 @@ export default function Navbar() {
       document.removeEventListener('mousedown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [dropdownOpen]);
+  }, []);
 
   const handleLogout = async () => {
     if (loggingOut) return;
@@ -77,67 +86,181 @@ export default function Navbar() {
       error(err.message || 'Could not sign out. Please try again.');
     } finally {
       setLoggingOut(false);
-      setDropdownOpen(false);
+      setUserDropdownOpen(false);
     }
   };
-
-  const links = isAuthenticated
-    ? [
-        { to: '/', label: 'Home', end: true, icon: Star },
-        { to: '/pdf-merger', label: 'PDF Merger', icon: FileText },
-        { to: '/image-compressor', label: 'Image Compressor', icon: FileImage },
-        { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { to: '/account', label: 'Account', icon: User },
-      ]
-    : PUBLIC_LINKS;
 
   return (
     <nav className={`nav${hidden ? ' nav--hidden' : ''}`} aria-label="Main navigation">
       <div className="nav-inner">
+        {/* Brand */}
         <Link to="/" className="brand" aria-label="NorthStar home">
-          <img className="brand-logo" src="/logo-128.png" alt="" aria-hidden="true" width="34" height="34" />
+          <div className="brand-logo-wrap">
+            <img className="brand-logo" src="/logo-128.png" alt="" aria-hidden="true" width="34" height="34" />
+          </div>
           <span className="brand-text">NORTHSTAR</span>
         </Link>
 
+        {/* Desktop / Mobile Nav Links */}
         <div className={`nav-links${menuOpen ? ' open' : ''}`} id="northstar-mobile-menu">
-          {links.map(({ to, label, icon: Icon, end, hash }) => (
-            <NavLink
-              key={label}
-              to={to}
-              end={end}
-              className={({ isActive }) => `nav-link${isActive && !hash ? ' active' : ''}`}
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `nav-link${isActive && !location.hash ? ' active' : ''}`}
+          >
+            Home
+          </NavLink>
+
+          {/* PDF Tools Dropdown */}
+          <div
+            className="nav-item-dropdown"
+            ref={pdfDropdownRef}
+            onMouseEnter={() => setPdfMenuOpen(true)}
+            onMouseLeave={() => setPdfMenuOpen(false)}
+          >
+            <button
+              type="button"
+              className={`nav-link nav-dropdown-trigger${location.pathname === '/pdf-merger' ? ' active' : ''}`}
+              onClick={() => setPdfMenuOpen((prev) => !prev)}
+              aria-expanded={pdfMenuOpen}
             >
-              <span className="row" style={{ gap: 7, flexWrap: 'nowrap' }}>
-                <Icon style={{ width: 15, height: 15 }} />
-                {label}
-              </span>
-            </NavLink>
-          ))}
+              <span>PDF Tools</span>
+              <ChevronDown style={{ width: 13, height: 13, transition: 'transform 0.2s', transform: pdfMenuOpen ? 'rotate(180deg)' : 'none' }} />
+            </button>
+            {pdfMenuOpen && (
+              <div className="nav-dropdown-menu">
+                <Link to="/pdf-merger" className="nav-dropdown-item" onClick={() => setPdfMenuOpen(false)}>
+                  <FileText style={{ width: 15, height: 15, color: '#19D9FF' }} />
+                  <div>
+                    <div className="dropdown-title">PDF Merger</div>
+                    <div className="dropdown-desc">Combine multiple PDFs in sequence</div>
+                  </div>
+                </Link>
+                <a href="/#toolkit" className="nav-dropdown-item" onClick={() => setPdfMenuOpen(false)}>
+                  <Scissors style={{ width: 15, height: 15, color: '#20E3A2' }} />
+                  <div>
+                    <div className="dropdown-title">Split PDF</div>
+                    <div className="dropdown-desc">Extract pages into separate files</div>
+                  </div>
+                </a>
+                <a href="/#toolkit" className="nav-dropdown-item" onClick={() => setPdfMenuOpen(false)}>
+                  <RotateCw style={{ width: 15, height: 15, color: '#8057FF' }} />
+                  <div>
+                    <div className="dropdown-title">Rotate PDF</div>
+                    <div className="dropdown-desc">Fix page orientations instantly</div>
+                  </div>
+                </a>
+                <a href="/#toolkit" className="nav-dropdown-item" onClick={() => setPdfMenuOpen(false)}>
+                  <ShieldCheck style={{ width: 15, height: 15, color: '#1769FF' }} />
+                  <div>
+                    <div className="dropdown-title">Protect PDF</div>
+                    <div className="dropdown-desc">Encrypt and lock with password</div>
+                  </div>
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Image Tools Dropdown */}
+          <div
+            className="nav-item-dropdown"
+            ref={imageDropdownRef}
+            onMouseEnter={() => setImageMenuOpen(true)}
+            onMouseLeave={() => setImageMenuOpen(false)}
+          >
+            <button
+              type="button"
+              className={`nav-link nav-dropdown-trigger${location.pathname === '/image-compressor' ? ' active' : ''}`}
+              onClick={() => setImageMenuOpen((prev) => !prev)}
+              aria-expanded={imageMenuOpen}
+            >
+              <span>Image Tools</span>
+              <ChevronDown style={{ width: 13, height: 13, transition: 'transform 0.2s', transform: imageMenuOpen ? 'rotate(180deg)' : 'none' }} />
+            </button>
+            {imageMenuOpen && (
+              <div className="nav-dropdown-menu">
+                <Link to="/image-compressor" className="nav-dropdown-item" onClick={() => setImageMenuOpen(false)}>
+                  <FileImage style={{ width: 15, height: 15, color: '#19D9FF' }} />
+                  <div>
+                    <div className="dropdown-title">Image Compressor</div>
+                    <div className="dropdown-desc">Lossy & lossless batch compression</div>
+                  </div>
+                </Link>
+                <a href="/#toolkit" className="nav-dropdown-item" onClick={() => setImageMenuOpen(false)}>
+                  <Zap style={{ width: 15, height: 15, color: '#20E3A2' }} />
+                  <div>
+                    <div className="dropdown-title">WebP &amp; JPG Converter</div>
+                    <div className="dropdown-desc">Convert formats with optimal quality</div>
+                  </div>
+                </a>
+              </div>
+            )}
+          </div>
+
+          <a href="/#toolkit" className="nav-link">
+            Features
+          </a>
+          <a href="/#how-it-works" className="nav-link">
+            How It Works
+          </a>
+          <a href="/#faq" className="nav-link">
+            FAQ
+          </a>
+
+          {isAuthenticated && (
+            <>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/account"
+                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
+              >
+                Account
+              </NavLink>
+            </>
+          )}
         </div>
 
+        {/* Right Actions */}
         <div className="nav-actions">
+          {/* Subtle Ambient Toggle Button */}
+          <button
+            type="button"
+            className="nav-icon-btn"
+            aria-label="Toggle visual brightness"
+            title="Ambient Lighting"
+            onClick={() => {}}
+          >
+            <Sun style={{ width: 17, height: 17 }} />
+          </button>
+
           {loading ? (
-            <span className="spinner" aria-label="Checking your session" />
+            <span className="spinner" aria-label="Checking session" />
           ) : isAuthenticated ? (
-            <div className="user-pill" ref={dropdownRef}>
+            <div className="user-pill" ref={userDropdownRef}>
               <button
                 type="button"
                 className="user-trigger"
-                onClick={() => setDropdownOpen((open) => !open)}
+                onClick={() => setUserDropdownOpen((open) => !open)}
                 aria-haspopup="menu"
-                aria-expanded={dropdownOpen}
+                aria-expanded={userDropdownOpen}
               >
                 <span className="avatar" aria-hidden="true">
-                  {initials(user.name)}
+                  {initials(user?.name)}
                 </span>
-                <span className="user-name">{user.name}</span>
+                <span className="user-name">{user?.name}</span>
+                <ChevronDown style={{ width: 13, height: 13 }} />
               </button>
 
-              {dropdownOpen && (
+              {userDropdownOpen && (
                 <div className="dropdown" role="menu">
                   <div className="dropdown-head">
-                    <p className="dropdown-name">{user.name}</p>
-                    <p className="dropdown-email">{user.email}</p>
+                    <p className="dropdown-name">{user?.name}</p>
+                    <p className="dropdown-email">{user?.email}</p>
                   </div>
                   <Link to="/dashboard" className="dropdown-item" role="menuitem">
                     <LayoutDashboard style={{ width: 16, height: 16 }} />
@@ -161,16 +284,17 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <>
-              <Link to="/signin" className="glass-button glass-button--ghost glass-button--sm">
+            <div className="auth-buttons">
+              <Link to="/signin" className="nav-btn-signin">
                 Sign In
               </Link>
-              <Link to="/signup" className="glass-button glass-button--sm">
+              <Link to="/signup" className="nav-btn-signup">
                 Sign Up
               </Link>
-            </>
+            </div>
           )}
 
+          {/* Mobile hamburger */}
           <button
             type="button"
             className="nav-toggle"

@@ -127,18 +127,27 @@ function isZip(buffer) {
     && (buffer[2] === 0x03 || buffer[2] === 0x05 || buffer[2] === 0x07);
 }
 
+let sharedMongoose = null;
+async function getMongoose() {
+  if (!sharedMongoose) {
+    sharedMongoose = require('mongoose');
+    const config = require('../config/env');
+    if (config.mongo.uri && sharedMongoose.connection.readyState !== 1) {
+      await sharedMongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 15000 });
+    }
+  }
+  return sharedMongoose;
+}
+
 /**
  * Remove the throwaway account so repeated runs do not litter the database.
  * Best effort — a failed cleanup must never fail the suite.
  */
 async function cleanup() {
-  let mongoose = null;
   try {
-    mongoose = require('mongoose');
-    const config = require('../config/env');
-    if (!config.mongo.uri) return;
-    await mongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 5000 });
-    const db = mongoose.connection.db;
+    const mg = await getMongoose();
+    const db = mg.connection.db;
+    if (!db) return;
     const user = await db.collection('users').findOne({ email: EMAIL }, { projection: { _id: 1 } });
     if (!user) return;
     await db.collection('activities').deleteMany({ user: user._id });
@@ -146,55 +155,45 @@ async function cleanup() {
   } catch {
     /* ignore */
   } finally {
-    if (mongoose) await mongoose.disconnect().catch(() => {});
+    if (sharedMongoose) await sharedMongoose.disconnect().catch(() => {});
   }
 }
 
 async function seedResetCode(code, { expiresAt = new Date(Date.now() + 10 * 60 * 1000), attempts = 0 } = {}) {
-  const mongoose = require('mongoose');
+  const mg = await getMongoose();
   const config = require('../config/env');
-  await mongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 5000 });
-  try {
-    const passwordResetCodeHash = crypto.createHmac('sha256', config.auth.jwtSecret)
-      .update(`${EMAIL}:${code}`)
-      .digest('hex');
-    const result = await mongoose.connection.db.collection('users').updateOne(
-      { email: EMAIL },
-      {
-        $set: {
-          passwordResetCodeHash,
-          passwordResetExpiresAt: expiresAt,
-          passwordResetAttempts: attempts,
-          passwordResetVerified: false,
-          passwordResetTokenHash: null,
-          passwordResetTokenExpiresAt: null,
-          passwordResetRequestedAt: new Date(),
-          passwordResetRequestWindowAt: new Date(),
-          passwordResetRequestCount: 1,
-        },
+  const passwordResetCodeHash = crypto.createHmac('sha256', config.auth.jwtSecret)
+    .update(`${EMAIL}:${code}`)
+    .digest('hex');
+  const result = await mg.connection.db.collection('users').updateOne(
+    { email: EMAIL },
+    {
+      $set: {
+        passwordResetCodeHash,
+        passwordResetExpiresAt: expiresAt,
+        passwordResetAttempts: attempts,
+        passwordResetVerified: false,
+        passwordResetTokenHash: null,
+        passwordResetTokenExpiresAt: null,
+        passwordResetRequestedAt: new Date(),
+        passwordResetRequestWindowAt: new Date(),
+        passwordResetRequestCount: 1,
       },
-    );
-    assert.equal(result.matchedCount, 1, 'smoke account must exist before seeding reset code');
-  } finally {
-    await mongoose.disconnect();
-  }
+    },
+  );
+  assert.equal(result.matchedCount, 1, 'smoke account must exist before seeding reset code');
 }
 
 async function assertStoredPasswordIsHashed() {
-  const mongoose = require('mongoose');
-  const config = require('../config/env');
-  await mongoose.connect(config.mongo.uri, { serverSelectionTimeoutMS: 5000 });
-  try {
-    const user = await mongoose.connection.db.collection('users').findOne(
-      { email: EMAIL },
-      { projection: { passwordHash: 1 } },
-    );
-    assert.ok(user?.passwordHash?.startsWith('$2'), 'stored password should be a bcrypt hash');
-    assert.notEqual(user.passwordHash, RESET_PASSWORD, 'plain password must never be stored');
-  } finally {
-    await mongoose.disconnect();
-  }
+  const mg = await getMongoose();
+  const user = await mg.connection.db.collection('users').findOne(
+    { email: EMAIL },
+    { projection: { passwordHash: 1 } },
+  );
+  assert.ok(user?.passwordHash?.startsWith('$2'), 'stored password should be a bcrypt hash');
+  assert.notEqual(user.passwordHash, RESET_PASSWORD, 'plain password must never be stored');
 }
+
 
 /* ------------------------------------------------------------------ *
  * Suite
