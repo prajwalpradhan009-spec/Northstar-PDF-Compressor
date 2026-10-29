@@ -29,11 +29,16 @@ async function requireAuth(req, res, next) {
       throw new HttpError(401, 'Your session is no longer valid. Please sign in again.');
     }
 
-    if (!db.isConnected()) {
+    let user;
+    if (db.isConnected()) {
+      user = await User.findById(payload.sub);
+    } else if (process.env.NODE_ENV !== 'production') {
+      const { devStore } = require('../lib/devStore');
+      user = await devStore.findById(payload.sub);
+    } else {
       throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
     }
 
-    const user = await User.findById(payload.sub);
     if (!user) throw new HttpError(401, 'Your account could not be found. Please sign in again.');
     if ((user.tokenVersion || 0) !== (payload.tv || 0)) {
       throw new HttpError(401, 'Your session has been revoked. Please sign in again.');

@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Activity = require('../models/Activity');
 const db = require('../config/db');
 const config = require('../config/env');
+const { devStore } = require('../lib/devStore');
 const { sendPasswordResetCode } = require('../lib/email');
 const { signToken, setSessionCookie, clearSessionCookie } = require('../lib/tokens');
 const {
@@ -63,12 +64,30 @@ function clearResetAuthorization() {
  * ------------------------------------------------------------------ */
 async function signup(req, res, next) {
   try {
-    if (!db.isConnected()) {
-      throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
-    }
-
     const { errors, value } = validateSignup(req.body || {});
     assertNoErrors(errors);
+
+    if (!db.isConnected()) {
+      if (config.isProduction) {
+        throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
+      }
+      console.warn('[auth] MongoDB offline: using development store for signup.');
+      const existing = await devStore.findByEmail(value.email);
+      if (existing) {
+        throw new HttpError(409, 'An account with that email already exists.', {
+          email: 'An account with that email already exists.',
+        });
+      }
+      const user = await devStore.createUser({
+        name: value.name,
+        email: value.email,
+        password: value.password,
+      });
+      return res.status(201).json({
+        message: 'Account created successfully.',
+        user: user.toPublicJSON(),
+      });
+    }
 
     const existing = await User.findOne({ email: value.email }).lean();
     if (existing) {
@@ -110,12 +129,24 @@ async function signup(req, res, next) {
  * ------------------------------------------------------------------ */
 async function signin(req, res, next) {
   try {
-    if (!db.isConnected()) {
-      throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
-    }
-
     const { errors, value } = validateSignin(req.body || {});
     assertNoErrors(errors);
+
+    if (!db.isConnected()) {
+      if (config.isProduction) {
+        throw new HttpError(503, 'The account service is temporarily unavailable. Please try again shortly.');
+      }
+      console.warn('[auth] MongoDB offline: using development store for signin.');
+      const user = await devStore.findByEmail(value.email);
+      const ok = user ? await user.verifyPassword(value.password) : false;
+      if (!user || !ok) {
+        throw new HttpError(401, 'Incorrect email or password.');
+      }
+      user.lastLoginAt = new Date();
+      await user.save();
+      setSessionCookie(res, signToken(user));
+      return res.json({ message: 'Welcome back!', user: user.toPublicJSON() });
+    }
 
     const user = await User.findOne({ email: value.email });
 
@@ -440,7 +471,9 @@ async function logout(req, res, next) {
  * ------------------------------------------------------------------ */
 async function me(req, res, next) {
   try {
-    if (!db.isConnected()) throw new HttpError(503, 'The account service is temporarily unavailable.');
+    if (!db.isConnected() && config.isProduction) {
+      throw new HttpError(503, 'The account service is temporarily unavailable.');
+    }
     res.json({ user: req.user.toPublicJSON() });
   } catch (error) {
     return next(error);
@@ -488,6 +521,14 @@ async function logoutAll(req, res, next) {
 async function dashboard(req, res, next) {
   try {
     const userId = req.user._id;
+
+    if (!db.isConnected()) {
+      if (!config.isProduction) {
+        const devDash = await devStore.getDashboard(userId);
+        return res.json(devDash);
+      }
+      throw new HttpError(503, 'Dashboard statistics are temporarily unavailable.');
+    }
 
     // One row per activity type, so the result is a list — not a single row.
     const rows = await Activity.aggregate([

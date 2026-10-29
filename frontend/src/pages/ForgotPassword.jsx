@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail, ShieldCheck, Star } from '../components/icons';
+import {
+  AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail,
+  ShieldCheck, Star,
+} from '../components/icons';
 import { Loader } from '../components/Loader';
 import Reveal from '../components/Reveal';
+import TiltCard from '../components/TiltCard';
 import { auth } from '../lib/api';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -123,215 +127,246 @@ export default function ForgotPassword() {
   };
 
   const title = {
-    email: 'Forgot password?',
-    otp: 'Verify your email',
-    password: 'Choose a new password',
-    success: 'Password reset successfully',
+    email: 'Forgot Password?',
+    otp: 'Verify Your Email',
+    password: 'Set New Password',
+    success: 'Password Updated',
   }[step];
 
   const subtitle = {
-    email: 'We’ll email you a code to securely reset your password.',
-    otp: 'Enter the 6-digit verification code sent to your email.',
+    email: 'We’ll email you a secure verification code to reset your password.',
+    otp: `Enter the 6-digit code sent to ${email}.`,
     password: 'Your email is verified. Create a strong new password.',
-    success: 'Your password has been updated. You can now sign in with it.',
+    success: 'Your password has been changed. You can now sign in with your new credentials.',
   }[step];
 
   return (
-    <div className="page page--top page--narrow">
-      <Reveal className="auth-card">
-        <div className="glass-panel">
-          <div className="auth-head">
-            <span className="modal-icon" aria-hidden="true">
-              {step === 'success' ? <CheckCircle2 /> : <Star />}
-            </span>
-            <h1 className="auth-title">{title}</h1>
-            <p className="auth-sub">{subtitle}</p>
-          </div>
+    <div className="auth-cinematic-scene">
+      <div className="auth-card-column" style={{ maxWidth: 520, margin: '0 auto', width: '100%' }}>
+        <Reveal>
+          <TiltCard maxTilt={8} className="auth-tilt-wrapper">
+            <div className="auth-3d-card glass-panel">
+              <div className="auth-3d-icon-badge" aria-hidden="true">
+                <div className="auth-3d-ring" />
+                {step === 'success' ? <CheckCircle2 className="auth-3d-star" style={{ color: '#20E3A2' }} /> : <Star className="auth-3d-star" />}
+              </div>
 
-          {formError && (
-            <div className="form-alert mb-20" role="alert">
-              <AlertCircle />
-              <span>{formError}</span>
-            </div>
-          )}
+              {/* Progress Steps */}
+              <div className="auth-steps-pill" aria-hidden="true">
+                <span className={`step-dot ${step === 'email' ? 'active' : 'done'}`}>1. Email</span>
+                <span className="step-arrow">&rarr;</span>
+                <span className={`step-dot ${step === 'otp' ? 'active' : step === 'password' || step === 'success' ? 'done' : ''}`}>2. Code</span>
+                <span className="step-arrow">&rarr;</span>
+                <span className={`step-dot ${step === 'password' ? 'active' : step === 'success' ? 'done' : ''}`}>3. Password</span>
+              </div>
 
-          {message && (
-            <div className="form-alert form-alert--success mb-20" role="status">
-              <CheckCircle2 />
-              <span>{message}</span>
-            </div>
-          )}
+              <div className="auth-head">
+                <h1 className="auth-title">{title}</h1>
+                <p className="auth-sub">{subtitle}</p>
+              </div>
 
-          {step === 'success' ? (
-            <div className="form">
-              <button
-                type="button"
-                className="glass-button glass-button--block glass-button--lg"
-                onClick={() => navigate('/signin', { replace: true, state: { passwordReset: true } })}
-              >
-                Return to Sign In
-              </button>
-            </div>
-          ) : (
-            <form className="form" onSubmit={submit} noValidate>
-              {step === 'email' && (
-                <div className="field">
-                  <label className="label" htmlFor="reset-email">
-                    Email<span className="req" aria-hidden="true">*</span>
-                  </label>
-                  <div className="input-wrap">
-                    <span className="input-icon" aria-hidden="true"><Mail /></span>
-                    <input
-                      id="reset-email"
-                      className="glass-input"
-                      type="email"
-                      autoComplete="email"
-                      inputMode="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(event) => {
-                        setEmail(event.target.value);
-                        setFormError('');
-                      }}
-                      disabled={busy}
-                      required
-                    />
-                  </div>
+              {formError && (
+                <div className="form-alert form-alert--error mb-20" role="alert">
+                  <AlertCircle />
+                  <span>{formError}</span>
                 </div>
               )}
 
-              {step === 'otp' && (
-                <>
-                  <div className="field">
-                    <label className="label" htmlFor="reset-otp">
-                      6-digit verification code<span className="req" aria-hidden="true">*</span>
-                    </label>
-                    <div className="input-wrap">
-                      <span className="input-icon" aria-hidden="true"><ShieldCheck /></span>
-                      <input
-                        id="reset-otp"
-                        className="glass-input reset-code-input"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        pattern="[0-9]{6}"
-                        maxLength={6}
-                        placeholder="000000"
-                        value={otp}
-                        onChange={(event) => {
-                          setOtp(event.target.value.replace(/\D/g, '').slice(0, 6));
-                          setFormError('');
-                        }}
-                        disabled={busy}
-                        required
-                      />
-                    </div>
-                    <p className="text-dim text-sm">The code expires after {otpExpiresMinutes} minutes.</p>
-                  </div>
-
-                  <div className="auth-reset-actions">
-                    <button
-                      type="button"
-                      className="link auth-forgot-resend"
-                      onClick={resendOtp}
-                      disabled={busy || cooldownSeconds > 0}
-                    >
-                      {cooldownSeconds > 0 ? `Resend code in ${cooldownSeconds}s` : 'Resend code'}
-                    </button>
-                    <button type="button" className="link auth-forgot-resend" onClick={changeEmail} disabled={busy}>
-                      Change email
-                    </button>
-                  </div>
-                </>
+              {message && (
+                <div className="form-alert form-alert--success mb-20" role="status">
+                  <CheckCircle2 />
+                  <span>{message}</span>
+                </div>
               )}
 
-              {step === 'password' && (
-                <>
-                  <div className="field">
-                    <label className="label" htmlFor="reset-password">
-                      New password<span className="req" aria-hidden="true">*</span>
-                    </label>
-                    <div className="input-wrap">
-                      <span className="input-icon" aria-hidden="true"><Lock /></span>
-                      <input
-                        id="reset-password"
-                        className="glass-input"
-                        type={showPassword ? 'text' : 'password'}
-                        autoComplete="new-password"
-                        minLength={8}
-                        maxLength={200}
-                        placeholder="At least 8 characters"
-                        value={newPassword}
-                        onChange={(event) => {
-                          setNewPassword(event.target.value);
-                          setFormError('');
-                        }}
-                        disabled={busy}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="reveal-btn"
-                        onClick={() => setShowPassword((visible) => !visible)}
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        aria-pressed={showPassword}
-                      >
-                        {showPassword ? <EyeOff /> : <Eye />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="field">
-                    <label className="label" htmlFor="reset-confirm-password">
-                      Confirm new password<span className="req" aria-hidden="true">*</span>
-                    </label>
-                    <div className="input-wrap">
-                      <span className="input-icon" aria-hidden="true"><Lock /></span>
-                      <input
-                        id="reset-confirm-password"
-                        className="glass-input"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        autoComplete="new-password"
-                        maxLength={200}
-                        placeholder="Enter your new password again"
-                        value={confirmPassword}
-                        onChange={(event) => {
-                          setConfirmPassword(event.target.value);
-                          setFormError('');
-                        }}
-                        disabled={busy}
-                        required
-                      />
-                      <button
-                        type="button"
-                        className="reveal-btn"
-                        onClick={() => setShowConfirmPassword((visible) => !visible)}
-                        aria-label={showConfirmPassword ? 'Hide confirmation' : 'Show confirmation'}
-                        aria-pressed={showConfirmPassword}
-                      >
-                        {showConfirmPassword ? <EyeOff /> : <Eye />}
-                      </button>
-                    </div>
-                  </div>
-                  <button type="button" className="link auth-forgot-resend" onClick={changeEmail} disabled={busy}>
-                    Start over and request a new code
+              {step === 'success' ? (
+                <div className="form">
+                  <button
+                    type="button"
+                    className="galaxy-btn-primary auth-submit-btn"
+                    onClick={() => navigate('/signin', { replace: true, state: { passwordReset: true } })}
+                  >
+                    Return to Sign In &rarr;
                   </button>
-                </>
+                </div>
+              ) : (
+                <form className="form" onSubmit={submit} noValidate>
+                  {step === 'email' && (
+                    <div className="field">
+                      <label className="label" htmlFor="reset-email">
+                        Email Address<span className="req" aria-hidden="true">*</span>
+                      </label>
+                      <div className="input-wrap">
+                        <span className="input-icon" aria-hidden="true"><Mail /></span>
+                        <input
+                          id="reset-email"
+                          className="glass-input"
+                          type="email"
+                          autoComplete="email"
+                          inputMode="email"
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(event) => {
+                            setEmail(event.target.value);
+                            setFormError('');
+                          }}
+                          disabled={busy}
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 'otp' && (
+                    <>
+                      <div className="field">
+                        <label className="label" htmlFor="reset-otp">
+                          6-Digit Verification Code<span className="req" aria-hidden="true">*</span>
+                        </label>
+                        <div className="input-wrap">
+                          <span className="input-icon" aria-hidden="true"><ShieldCheck /></span>
+                          <input
+                            id="reset-otp"
+                            className="glass-input reset-code-input"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            pattern="[0-9]{6}"
+                            maxLength={6}
+                            placeholder="000000"
+                            value={otp}
+                            onChange={(event) => {
+                              setOtp(event.target.value.replace(/\D/g, '').slice(0, 6));
+                              setFormError('');
+                            }}
+                            disabled={busy}
+                            required
+                          />
+                        </div>
+                        <p className="text-dim text-sm" style={{ marginTop: 4 }}>
+                          The code expires after {otpExpiresMinutes} minutes.
+                        </p>
+                      </div>
+
+                      <div className="auth-reset-actions">
+                        <button
+                          type="button"
+                          className="link-cyan auth-forgot-resend"
+                          onClick={resendOtp}
+                          disabled={busy || cooldownSeconds > 0}
+                        >
+                          {cooldownSeconds > 0 ? `Resend code in ${cooldownSeconds}s` : 'Resend code'}
+                        </button>
+                        <button type="button" className="link-cyan auth-forgot-resend" onClick={changeEmail} disabled={busy}>
+                          Change email
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {step === 'password' && (
+                    <>
+                      <div className="field">
+                        <label className="label" htmlFor="reset-password">
+                          New Password<span className="req" aria-hidden="true">*</span>
+                        </label>
+                        <div className="input-wrap">
+                          <span className="input-icon" aria-hidden="true"><Lock /></span>
+                          <input
+                            id="reset-password"
+                            className="glass-input"
+                            type={showPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            minLength={8}
+                            maxLength={200}
+                            placeholder="At least 8 characters"
+                            value={newPassword}
+                            onChange={(event) => {
+                              setNewPassword(event.target.value);
+                              setFormError('');
+                            }}
+                            disabled={busy}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="reveal-btn"
+                            onClick={() => setShowPassword((visible) => !visible)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            aria-pressed={showPassword}
+                          >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="field">
+                        <label className="label" htmlFor="reset-confirm-password">
+                          Confirm New Password<span className="req" aria-hidden="true">*</span>
+                        </label>
+                        <div className="input-wrap">
+                          <span className="input-icon" aria-hidden="true"><Lock /></span>
+                          <input
+                            id="reset-confirm-password"
+                            className="glass-input"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            maxLength={200}
+                            placeholder="Enter your new password again"
+                            value={confirmPassword}
+                            onChange={(event) => {
+                              setConfirmPassword(event.target.value);
+                              setFormError('');
+                            }}
+                            disabled={busy}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="reveal-btn"
+                            onClick={() => setShowConfirmPassword((visible) => !visible)}
+                            aria-label={showConfirmPassword ? 'Hide confirmation' : 'Show confirmation'}
+                            aria-pressed={showConfirmPassword}
+                          >
+                            {showConfirmPassword ? <EyeOff /> : <Eye />}
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" className="link-cyan auth-forgot-resend" onClick={changeEmail} disabled={busy}>
+                        Start over &amp; request new code
+                      </button>
+                    </>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="galaxy-btn-primary auth-submit-btn"
+                    disabled={busy}
+                  >
+                    {busy
+                      ? <Loader text={step === 'email' ? 'Sending code…' : step === 'otp' ? 'Verifying code…' : 'Resetting password…'} />
+                      : step === 'email' ? 'Send Verification Code →' : step === 'otp' ? 'Verify Code →' : 'Update Password →'}
+                  </button>
+
+                  <p className="form-foot center">
+                    Remembered your password?{' '}
+                    <Link className="link-cyan" to="/signin">
+                      Sign In
+                    </Link>
+                  </p>
+                </form>
               )}
 
-              <button type="submit" className="glass-button glass-button--block glass-button--lg" disabled={busy}>
-                {busy
-                  ? <Loader text={step === 'email' ? 'Sending code…' : step === 'otp' ? 'Verifying code…' : 'Resetting password…'} />
-                  : step === 'email' ? 'Send Verification Code' : step === 'otp' ? 'Verify Code' : 'Reset Password'}
-              </button>
-
-              <p className="form-foot center">
-                Remembered your password? <Link className="link" to="/signin">Sign In</Link>
-              </p>
-            </form>
-          )}
-        </div>
-      </Reveal>
+              <div className="auth-security-foot">
+                <ShieldCheck style={{ width: 15, height: 15, color: '#19D9FF', flexShrink: 0 }} />
+                <span>
+                  Protected by rate limiting &amp; single-use OTP codes.
+                </span>
+              </div>
+            </div>
+          </TiltCard>
+        </Reveal>
+      </div>
     </div>
   );
 }

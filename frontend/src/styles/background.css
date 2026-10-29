@@ -22,11 +22,26 @@
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 68% 46% at 15% 18%, rgba(0, 123, 255, 0.15), transparent 58%),
-    radial-gradient(ellipse 56% 42% at 82% 14%, rgba(139, 92, 246, 0.12), transparent 58%),
-    radial-gradient(ellipse 52% 38% at 70% 82%, rgba(255, 45, 149, 0.08), transparent 50%),
-    linear-gradient(180deg, #F8FAFF 0%, #F8FAFF 100%);
+    radial-gradient(ellipse 68% 46% at 15% 18%, rgba(23, 105, 255, 0.22), transparent 58%),
+    radial-gradient(ellipse 56% 42% at 82% 14%, rgba(128, 87, 255, 0.18), transparent 58%),
+    radial-gradient(ellipse 52% 38% at 70% 82%, rgba(25, 217, 255, 0.12), transparent 50%),
+    linear-gradient(180deg, #061126 0%, #0A1D3A 50%, #061126 100%);
 }
+
+[data-theme='light'] .nebula {
+  background:
+    radial-gradient(ellipse 68% 46% at 15% 18%, rgba(0, 102, 255, 0.1), transparent 58%),
+    radial-gradient(ellipse 56% 42% at 82% 14%, rgba(112, 72, 232, 0.08), transparent 58%),
+    radial-gradient(ellipse 52% 38% at 70% 82%, rgba(0, 180, 216, 0.08), transparent 50%),
+    linear-gradient(180deg, #F4F7FC 0%, #E8F0FA 50%, #F4F7FC 100%);
+}
+
+[data-theme='light'] .aurora--1 { opacity: 0.22; }
+[data-theme='light'] .aurora--2 { opacity: 0.18; }
+[data-theme='light'] .aurora--3 { opacity: 0.16; }
+[data-theme='light'] .cloud { opacity: 0.14; }
+[data-theme='light'] .scroll-cloud-layer { opacity: 0.45; filter: contrast(0.85); }
+
 
 .nebula::after {
   content: '';
@@ -152,9 +167,41 @@
   filter: blur(78px);
   opacity: 0.3;
   pointer-events: none;
-  will-change: transform, opacity;
+  will-change: transform, opacity, translate;
   /* Cyan orbs drift side to side; violet orbs float up and down. */
   animation: driftX 24s ease-in-out infinite alternate;
+  /* Scroll parallax offset smoothly tracks page scroll */
+  translate: calc(var(--scroll-y, 0px) * var(--s-factor-x, 0)) calc(var(--scroll-y, 0px) * var(--s-factor-y, 0));
+  transition: translate 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- 4b. Billowing Scroll Clouds that react dynamically to scroll --------- */
+.scroll-cloud-layer {
+  position: absolute;
+  width: 125vw;
+  left: -12vw;
+  pointer-events: none;
+  opacity: 0.85;
+  will-change: transform;
+  mix-blend-mode: screen;
+}
+
+.scroll-cloud-layer--1 {
+  top: 12vh;
+  transform: translate3d(var(--scroll-cloud-1-x, 0px), var(--scroll-cloud-1-y, 0px), 0) scale(var(--scroll-cloud-scale, 1));
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.scroll-cloud-layer--2 {
+  top: 52vh;
+  transform: translate3d(var(--scroll-cloud-2-x, 0px), var(--scroll-cloud-2-y, 0px), 0) scale(var(--scroll-cloud-scale, 1));
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.billowing-svg {
+  width: 100%;
+  height: 480px;
+  display: block;
 }
 
 /* Distinct hues, axes and timings so the atmosphere never looks like a loop. */

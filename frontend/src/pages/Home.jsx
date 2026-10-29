@@ -129,8 +129,9 @@ export default function Home() {
        * SECTION 01 — MIDNIGHT GALAXY HERO
        * ==================================================================== */}
       <section className="theme-galaxy" aria-labelledby="galaxy-hero-title">
-        {/* Layered mountain silhouettes at bottom */}
+        {/* Layered mountain silhouettes at bottom with floating cosmic mist clouds */}
         <div className="galaxy-mountains" aria-hidden="true">
+          <div className="galaxy-mist-clouds" />
           <svg viewBox="0 0 1440 280" fill="none" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
             <path
               d="M0 280L0 190L120 150L260 210L420 130L600 230L780 140L940 200L1120 120L1300 210L1440 160L1440 280Z"
@@ -154,8 +155,8 @@ export default function Home() {
 
           <Reveal delay={60}>
             <h1 className="galaxy-headline" id="galaxy-hero-title">
-              <span className="line-1">YOUR FILES.</span>
-              <span className="line-2">YOUR FLOW.</span>
+              <span className="line-1">YOUR FILES, YOUR FLOW.</span>
+
               <span className="line-3">REIMAGINED.</span>
             </h1>
           </Reveal>
@@ -301,43 +302,49 @@ export default function Home() {
         {/* Landscape Graphic: Craggy mountain peaks, crimson clouds, moon, and traveler */}
         <div className="workflow-landscape" aria-hidden="true">
           <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
-            {/* Pale glowing moon in upper right */}
-            <circle cx="1280" cy="190" r="85" fill="#FFF4EC" fillOpacity="0.75" />
-            <circle cx="1280" cy="190" r="95" stroke="#FFE9DF" strokeWidth="1.5" strokeOpacity="0.4" />
+            {/* Pale glowing moon in upper right with scroll parallax */}
+            <g className="workflow-moon">
+              <circle cx="1280" cy="190" r="85" fill="#FFF4EC" fillOpacity="0.75" />
+              <circle cx="1280" cy="190" r="95" stroke="#FFE9DF" strokeWidth="1.5" strokeOpacity="0.4" />
+            </g>
 
             {/* Left Mountain Crag */}
             <path
               d="M-40 900L-40 450L60 380L140 460L240 320L340 500L420 440L500 580L440 900Z"
               fill="#18181C"
             />
-            {/* Left Billowing Crimson Clouds */}
-            <path
-              d="M-30 620 C20 540, 100 520, 160 570 C220 500, 320 510, 350 590 C420 540, 520 600, 480 720 C540 800, 460 900, 360 900 L-40 900Z"
-              fill="#C8102E"
-              fillOpacity="0.94"
-            />
-            <path
-              d="M-20 700 C40 650, 120 660, 170 720 C230 670, 320 700, 340 780 C400 810, 380 900, 300 900 L-40 900Z"
-              fill="#E62746"
-              fillOpacity="0.85"
-            />
+            {/* Left Billowing Crimson Clouds with scroll-driven billowing motion */}
+            <g className="billowing-clouds-left">
+              <path
+                d="M-30 620 C20 540, 100 520, 160 570 C220 500, 320 510, 350 590 C420 540, 520 600, 480 720 C540 800, 460 900, 360 900 L-40 900Z"
+                fill="#C8102E"
+                fillOpacity="0.94"
+              />
+              <path
+                d="M-20 700 C40 650, 120 660, 170 720 C230 670, 320 700, 340 780 C400 810, 380 900, 300 900 L-40 900Z"
+                fill="#E62746"
+                fillOpacity="0.85"
+              />
+            </g>
 
             {/* Right Mountain Cliff with Precipice */}
             <path
               d="M1480 900L1480 340L1410 320L1350 360L1260 480L1180 440L1090 560L1020 660L1120 900Z"
               fill="#18181C"
             />
-            {/* Right Billowing Crimson Clouds */}
-            <path
-              d="M1000 900 C980 780, 1070 700, 1150 720 C1190 620, 1310 610, 1380 670 C1460 620, 1500 680, 1500 820 L1500 900Z"
-              fill="#C8102E"
-              fillOpacity="0.94"
-            />
-            <path
-              d="M1080 900 C1100 800, 1200 780, 1260 840 C1320 790, 1420 810, 1460 900Z"
-              fill="#A30D28"
-              fillOpacity="0.9"
-            />
+            {/* Right Billowing Crimson Clouds with scroll-driven billowing motion */}
+            <g className="billowing-clouds-right">
+              <path
+                d="M1000 900 C980 780, 1070 700, 1150 720 C1190 620, 1310 610, 1380 670 C1460 620, 1500 680, 1500 820 L1500 900Z"
+                fill="#C8102E"
+                fillOpacity="0.94"
+              />
+              <path
+                d="M1080 900 C1100 800, 1200 780, 1260 840 C1320 790, 1420 810, 1460 900Z"
+                fill="#A30D28"
+                fillOpacity="0.9"
+              />
+            </g>
 
             {/* Tiny Lone Traveler Silhouette atop right cliff at (1410, 315) */}
             <g transform="translate(1402, 290)">

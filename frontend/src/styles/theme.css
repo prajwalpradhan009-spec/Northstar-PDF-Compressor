@@ -5,46 +5,46 @@
    ========================================================================== */
 
 :root {
-  /* --- Base surfaces — premium light SaaS palette ----------------------- */
-  --bg-0: #F8FAFF;
-  --bg-1: #FFFFFF;
-  --bg-2: #EFF6FF;
+  /* --- Base surfaces — cinematic midnight galaxy palette ----------------- */
+  --bg-0: #061126;
+  --bg-1: #0A1D3A;
+  --bg-2: #0E254A;
 
   /* --- Accents ------------------------------------------------------- */
-  --blue: #007BFF;
-  --cyan: #007BA7;
-  --sky: #EFF6FF;
-  --purple: #8B5CF6;
-  --violet: #8B5CF6;
-  --green: #34d399;
-  --red: #fb7185;
-  --amber: #fbbf24;
+  --blue: #1769FF;
+  --cyan: #19D9FF;
+  --sky: #E0F2FE;
+  --purple: #8057FF;
+  --violet: #8057FF;
+  --green: #20E3A2;
+  --red: #FF1744;
+  --amber: #FBBF24;
 
   /* --- Text ---------------------------------------------------------- */
-  --text: #0F172A;
-  --text-soft: #475569;
-  --text-dim: #64748B;
-  --text-faint: #94A3B8;
+  --text: #FFFFFF;
+  --text-soft: #C6D4E8;
+  --text-dim: #8E9CB2;
+  --text-faint: #5E6E85;
 
   /* --- Glass --------------------------------------------------------- */
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-bg-strong: rgba(255, 255, 255, 0.96);
-  --glass-border: rgba(226, 232, 240, 0.92);
-  --glass-border-strong: rgba(0, 123, 255, 0.22);
-  --glass-blur: 18px;
-  --glass-blur-lg: 24px;
-  --glass-saturate: 120%;
+  --glass-bg: rgba(10, 29, 58, 0.72);
+  --glass-bg-strong: rgba(10, 29, 58, 0.92);
+  --glass-border: rgba(80, 170, 255, 0.24);
+  --glass-border-strong: rgba(25, 217, 255, 0.45);
+  --glass-blur: 20px;
+  --glass-blur-lg: 28px;
+  --glass-saturate: 140%;
 
   /* --- Gradients / glow ---------------------------------------------- */
-  --grad-primary: linear-gradient(135deg, #007BFF 0%, #007BA7 48%, #8B5CF6 100%);
-  --grad-cyan: linear-gradient(135deg, #E0F2FE 0%, #DBEAFE 100%);
-  --grad-success: linear-gradient(135deg, #34d399 0%, #22d3ee 100%);
-  --grad-danger: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
-  --glow-blue: 0 0 0 1px rgba(0, 123, 255, 0.12), 0 10px 30px -12px rgba(0, 123, 255, 0.45);
-  --glow-cyan: 0 0 0 1px rgba(0, 123, 255, 0.14), 0 10px 30px -12px rgba(0, 123, 255, 0.42);
-  --glow-violet: 0 0 0 1px rgba(139, 92, 246, 0.14), 0 10px 30px -12px rgba(139, 92, 246, 0.42);
-  --glow-success: 0 0 0 1px rgba(52, 211, 153, 0.2), 0 10px 30px -12px rgba(52, 211, 153, 0.38);
-  --glow-danger: 0 0 0 1px rgba(251, 113, 133, 0.2), 0 10px 30px -12px rgba(251, 113, 133, 0.38);
+  --grad-primary: linear-gradient(135deg, #1769FF 0%, #19D9FF 100%);
+  --grad-cyan: linear-gradient(135deg, #19D9FF 0%, #1769FF 100%);
+  --grad-success: linear-gradient(135deg, #20E3A2 0%, #76FFD1 100%);
+  --grad-danger: linear-gradient(135deg, #FF1744 0%, #C8102E 100%);
+  --glow-blue: 0 0 0 1px rgba(23, 105, 255, 0.3), 0 10px 30px -10px rgba(23, 105, 255, 0.6);
+  --glow-cyan: 0 0 0 1px rgba(25, 217, 255, 0.35), 0 10px 30px -10px rgba(25, 217, 255, 0.55);
+  --glow-violet: 0 0 0 1px rgba(128, 87, 255, 0.35), 0 10px 30px -10px rgba(128, 87, 255, 0.55);
+  --glow-success: 0 0 0 1px rgba(32, 227, 162, 0.3), 0 10px 30px -10px rgba(32, 227, 162, 0.5);
+  --glow-danger: 0 0 0 1px rgba(255, 23, 68, 0.3), 0 10px 30px -10px rgba(255, 23, 68, 0.5);
 
   /* --- Shape / motion ------------------------------------------------ */
   --r-sm: 10px;
@@ -53,9 +53,9 @@
   --r-xl: 30px;
   --r-pill: 999px;
 
-  --shadow-sm: 0 4px 18px -10px rgba(15, 23, 42, 0.12);
-  --shadow-md: 0 18px 46px -28px rgba(15, 23, 42, 0.18);
-  --shadow-lg: 0 26px 60px -26px rgba(15, 23, 42, 0.18);
+  --shadow-sm: 0 4px 18px -10px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 18px 46px -28px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 26px 60px -26px rgba(0, 0, 0, 0.9);
 
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -67,6 +67,45 @@
   --nav-h: 68px;
   --page-max: 1240px;
   --gap: 20px;
+}
+
+/* ==========================================================================
+   LIGHT THEME OVERRIDES
+   ========================================================================== */
+
+[data-theme='light'],
+.theme-light {
+  --bg-0: #F4F7FC;
+  --bg-1: #FFFFFF;
+  --bg-2: #E8F0FA;
+
+  --blue: #0066FF;
+  --cyan: #0099DD;
+  --sky: #E1F0FF;
+  --purple: #7048E8;
+  --violet: #7048E8;
+  --green: #10B981;
+  --red: #EF4444;
+  --amber: #F59E0B;
+
+  --text: #0B132B;
+  --text-soft: #2D3748;
+  --text-dim: #5A6A85;
+  --text-faint: #8492A6;
+
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-bg-strong: #FFFFFF;
+  --glass-border: rgba(180, 205, 237, 0.7);
+  --glass-border-strong: rgba(0, 102, 255, 0.35);
+
+  --grad-primary: linear-gradient(135deg, #0066FF 0%, #00B4D8 100%);
+  --grad-cyan: linear-gradient(135deg, #00B4D8 0%, #0066FF 100%);
+  --glow-blue: 0 0 0 1px rgba(0, 102, 255, 0.15), 0 10px 28px -10px rgba(0, 102, 255, 0.3);
+  --glow-cyan: 0 0 0 1px rgba(0, 180, 216, 0.2), 0 10px 28px -10px rgba(0, 180, 216, 0.3);
+
+  --shadow-sm: 0 4px 18px -10px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 18px 46px -28px rgba(15, 23, 42, 0.14);
+  --shadow-lg: 0 26px 60px -26px rgba(15, 23, 42, 0.18);
 }
 
 /* ==========================================================================
@@ -214,12 +253,12 @@ p {
 /* .glass — the base translucent navy panel. */
 .glass {
   position: relative;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(10, 29, 58, 0.72);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .glass::before {
@@ -228,7 +267,7 @@ p {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(160deg, rgba(0, 123, 255, 0.18), transparent 42%, transparent 62%, rgba(139, 92, 246, 0.18));
+  background: linear-gradient(160deg, rgba(25, 217, 255, 0.28), transparent 42%, transparent 62%, rgba(128, 87, 255, 0.28));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -238,33 +277,34 @@ p {
 
 .glass-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(10, 29, 58, 0.75);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   transition: transform var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out),
     box-shadow var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
 }
 
 .glass-card:hover {
   transform: translateY(-4px);
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(0, 123, 255, 0.26);
-  box-shadow: 0 20px 40px -30px rgba(15, 23, 42, 0.24), 0 0 0 1px rgba(0, 123, 255, 0.08);
+  background: rgba(14, 38, 76, 0.88);
+  border-color: rgba(25, 217, 255, 0.45);
+  box-shadow: 0 20px 44px -20px rgba(0, 0, 0, 0.8), 0 0 28px -8px rgba(25, 217, 255, 0.35);
 }
 
 .glass-panel {
   position: relative;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(8, 22, 46, 0.88);
   -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
   border: 1px solid var(--glass-border);
   border-radius: var(--r-xl);
-  box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow-lg), 0 0 32px -12px rgba(25, 217, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   padding: clamp(20px, 3.2vw, 38px);
 }
+
 
 /* .glass-button — filled primary action. */
 .glass-button {
@@ -321,10 +361,10 @@ p {
 }
 
 .glass-button--ghost {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 123, 255, 0.25);
-  box-shadow: 0 10px 24px -18px rgba(15, 23, 42, 0.22);
+  color: #FFFFFF;
+  background: rgba(10, 29, 58, 0.7);
+  border: 1px solid rgba(80, 170, 255, 0.35);
+  box-shadow: 0 10px 24px -18px rgba(0, 0, 0, 0.6);
 }
 
 .glass-button--ghost::after {
@@ -332,10 +372,12 @@ p {
 }
 
 .glass-button--ghost:hover:not(:disabled) {
-  background: rgba(239, 246, 255, 0.96);
-  border-color: rgba(0, 123, 255, 0.48);
-  box-shadow: 0 16px 28px -20px rgba(0, 123, 255, 0.38);
+  background: rgba(16, 42, 84, 0.9);
+  border-color: rgba(25, 217, 255, 0.6);
+  color: #FFFFFF;
+  box-shadow: 0 0 24px -8px rgba(25, 217, 255, 0.4);
 }
+
 
 .glass-button--danger {
   color: #fff;

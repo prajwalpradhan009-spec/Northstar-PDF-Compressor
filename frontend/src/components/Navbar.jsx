@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { initials } from '../lib/format';
 import {
   ChevronDown, FileImage, FileText, HelpCircle, LayoutDashboard, LogOut, Menu,
-  RotateCw, Scissors, Settings, ShieldCheck, Sparkle, Star, Sun, User, X, Zap,
+  Moon, RotateCw, Scissors, Settings, ShieldCheck, Sparkle, Star, Sun, User, X, Zap,
 } from './icons';
 
 export default function Navbar() {
@@ -14,12 +14,25 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('northstar_theme') || 'dark';
+  });
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [pdfMenuOpen, setPdfMenuOpen] = useState(false);
   const [imageMenuOpen, setImageMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('northstar_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((curr) => (curr === 'dark' ? 'light' : 'dark'));
+  };
 
   const userDropdownRef = useRef(null);
   const pdfDropdownRef = useRef(null);
@@ -98,7 +111,7 @@ export default function Navbar() {
           <div className="brand-logo-wrap">
             <img className="brand-logo" src="/logo-128.png" alt="" aria-hidden="true" width="34" height="34" />
           </div>
-          <span className="brand-text">NORTHSTAR</span>
+          <span className="brand-text">NorthStar</span>
         </Link>
 
         {/* Desktop / Mobile Nav Links */}
@@ -227,15 +240,15 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="nav-actions">
-          {/* Subtle Ambient Toggle Button */}
+          {/* Dark / Light Mode Toggle Button */}
           <button
             type="button"
             className="nav-icon-btn"
-            aria-label="Toggle visual brightness"
-            title="Ambient Lighting"
-            onClick={() => {}}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            onClick={toggleTheme}
           >
-            <Sun style={{ width: 17, height: 17 }} />
+            {theme === 'dark' ? <Sun style={{ width: 17, height: 17 }} /> : <Moon style={{ width: 17, height: 17 }} />}
           </button>
 
           {loading ? (

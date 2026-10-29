@@ -88,11 +88,11 @@
   min-height: var(--nav-h);
   padding: 10px 12px 10px 20px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.88);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 12px 30px -20px rgba(15, 23, 42, 0.2);
+  background: rgba(8, 14, 28, 0.82);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(80, 170, 255, 0.25);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.7), 0 0 24px -10px rgba(25, 217, 255, 0.2);
 }
 
 /* Hide on scroll-down, reveal on scroll-up. */
@@ -198,17 +198,18 @@
   gap: 9px;
   padding: 5px 13px 5px 5px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid var(--glass-border);
-  color: var(--text);
+  background: rgba(10, 24, 48, 0.75);
+  border: 1px solid rgba(80, 170, 255, 0.3);
+  color: #FFFFFF;
   font-size: 0.88rem;
   font-weight: 600;
-  transition: background var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+  transition: background var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
 }
 
 .user-trigger:hover {
-  background: rgba(239, 246, 255, 0.9);
-  border-color: var(--glass-border-strong);
+  background: rgba(16, 38, 76, 0.9);
+  border-color: rgba(25, 217, 255, 0.5);
+  box-shadow: 0 0 16px -4px rgba(25, 217, 255, 0.3);
 }
 
 .avatar {
@@ -463,9 +464,9 @@
   height: 62px;
   margin: -31px 0 0 -31px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(226, 232, 240, 0.82);
-  box-shadow: 0 18px 38px -26px rgba(15, 23, 42, 0.25);
+  background: rgba(10, 24, 48, 0.85);
+  border: 1px solid rgba(80, 170, 255, 0.35);
+  box-shadow: 0 18px 38px -18px rgba(0, 0, 0, 0.8), 0 0 20px -8px rgba(25, 217, 255, 0.3);
   animation: orbitFloat 9s ease-in-out infinite;
   will-change: transform;
 }
@@ -531,9 +532,9 @@
 .feature-card {
   padding: 26px 24px;
   text-align: left;
-  border: 1px solid #E2E8F0;
-  background: #FFFFFF;
-  box-shadow: 0 12px 30px -26px rgba(15, 23, 42, 0.24);
+  border: 1px solid rgba(80, 170, 255, 0.25);
+  background: rgba(10, 24, 48, 0.75);
+  box-shadow: 0 16px 36px -20px rgba(0, 0, 0, 0.8), 0 0 24px -10px rgba(25, 217, 255, 0.2);
 }
 
 .feature-icon {
@@ -605,8 +606,8 @@
   position: relative;
   padding: 28px 24px;
   text-align: center;
-  border: 1px solid rgba(0, 123, 255, 0.12);
-  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(80, 170, 255, 0.25);
+  background: rgba(10, 24, 48, 0.75);
 }
 
 .step-num {
@@ -3498,5 +3499,583 @@ body:has(.hero) .nav-link.active {
   color: #A6B8CE;
   font-size: clamp(1rem, 2vw, 1.15rem);
   margin-bottom: 34px;
+}
+
+/* ==========================================================================
+   SCROLL-DRIVEN CLOUD & MIST ANIMATIONS
+   ========================================================================== */
+
+/* Galaxy Hero Mountain Mist that shifts on scroll */
+.galaxy-mist-clouds {
+  position: absolute;
+  top: -60px;
+  left: -15%;
+  width: 130%;
+  height: 140px;
+  background: radial-gradient(ellipse 65% 55% at 50% 65%, rgba(25, 217, 255, 0.2), transparent 70%);
+  filter: blur(45px);
+  pointer-events: none;
+  transform: translate3d(var(--scroll-cloud-1-x, 0px), 0, 0);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Section 03 — Mountain Crags & Billowing Crimson Clouds on Scroll */
+.billowing-clouds-left {
+  will-change: transform;
+  transform-origin: bottom left;
+  animation: billowFloatLeft 18s ease-in-out infinite alternate;
+  translate: calc(var(--scroll-y, 0px) * -0.05) calc(var(--scroll-y, 0px) * -0.07);
+  transition: translate 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.billowing-clouds-right {
+  will-change: transform;
+  transform-origin: bottom right;
+  animation: billowFloatRight 16s ease-in-out infinite alternate;
+  translate: calc(var(--scroll-y, 0px) * 0.06) calc(var(--scroll-y, 0px) * -0.06);
+  transition: translate 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.workflow-moon {
+  will-change: transform;
+  translate: 0 calc(var(--scroll-y, 0px) * 0.035);
+  transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes billowFloatLeft {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.05) rotate(1deg) translateY(-8px); }
+  100% { transform: scale(1.02) rotate(-1deg) translateY(-14px); }
+}
+
+@keyframes billowFloatRight {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.06) rotate(-1.5deg) translateY(-10px); }
+  100% { transform: scale(1.03) rotate(1deg) translateY(-16px); }
+}
+
+/* ==========================================================================
+   CINEMATIC 3D AUTH REDESIGN (Sign In & Sign Up & Reset)
+   ========================================================================== */
+
+.auth-cinematic-scene {
+  position: relative;
+  min-height: calc(100vh - var(--nav-h));
+  min-height: calc(100dvh - var(--nav-h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--nav-h) + clamp(20px, 4vw, 40px)) clamp(16px, 4vw, 32px) 80px;
+  perspective: 1400px;
+  overflow: hidden;
+}
+
+.auth-cinematic-grid {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: clamp(36px, 5vw, 72px);
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .auth-cinematic-grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+  .auth-showcase {
+    display: none;
+  }
+}
+
+/* --- Left Column: 3D Holographic Feature Showcase ----------------------- */
+.auth-showcase {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-hero-title {
+  font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.auth-hero-title .line-1 {
+  display: block;
+  color: #FFFFFF;
+}
+
+.auth-hero-title .line-cyan {
+  display: block;
+  background: linear-gradient(120deg, #19D9FF 0%, #1769FF 60%, #8057FF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 30px rgba(25, 217, 255, 0.4));
+}
+
+.auth-hero-title .line-sub {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.78rem, 1.2vw, 0.88rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #8E9CB2;
+  margin-top: 10px;
+}
+
+.auth-hero-desc {
+  color: #C6D4E8;
+  font-size: clamp(0.98rem, 1.8vw, 1.12rem);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+/* 3D Holographic Card in Showcase */
+.auth-holo-card {
+  position: relative;
+  background: rgba(10, 26, 54, 0.65);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(80, 170, 255, 0.3);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 48px -18px rgba(0, 0, 0, 0.8), 0 0 35px -12px rgba(25, 217, 255, 0.25);
+  margin-bottom: 32px;
+  animation: holoFloat 8s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes holoFloat {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(0.8deg); }
+  100% { transform: translateY(4px) rotate(-0.5deg); }
+}
+
+.holo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.holo-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #20E3A2;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #20E3A2;
+  box-shadow: 0 0 10px #20E3A2;
+  animation: liveBlink 1.8s infinite;
+}
+
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.holo-sub-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(25, 217, 255, 0.1);
+  border: 1px solid rgba(25, 217, 255, 0.25);
+  color: #19D9FF;
+}
+
+/* Stream Nodes Simulation */
+.holo-stream-wrap {
+  background: rgba(4, 12, 28, 0.6);
+  border: 1px solid rgba(80, 170, 255, 0.18);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.holo-stream-nodes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.holo-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: rgba(25, 217, 255, 0.08);
+  border: 1px solid rgba(25, 217, 255, 0.25);
+  color: #FFFFFF;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.holo-node-arrow {
+  color: #19D9FF;
+  font-weight: 800;
+}
+
+.holo-stream-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.holo-stream-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 50%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, #19D9FF, #8057FF, transparent);
+  animation: streamRun 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes streamRun {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+.holo-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.holo-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #C6D4E8;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.auth-trust-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-trust-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #C6D4E8;
+  font-size: 0.92rem;
+}
+
+/* --- Right Column: 3D Interactive Tilt Glass Card ----------------------- */
+.auth-card-column {
+  position: relative;
+  width: 100%;
+}
+
+.tilt-card-wrap {
+  position: relative;
+  width: 100%;
+  transform-style: preserve-3d;
+}
+
+.tilt-card-inner {
+  position: relative;
+  transform: rotateX(var(--tilt-rx, 0deg)) rotateY(var(--tilt-ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 26px;
+}
+
+.tilt-card-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle 420px at var(--glare-x, 50%) var(--glare-y, 50%), rgba(25, 217, 255, 0.16), transparent 60%);
+  opacity: var(--glare-o, 0);
+  transition: opacity 0.25s ease-out;
+  z-index: 10;
+}
+
+.auth-3d-card {
+  position: relative;
+  background: rgba(8, 22, 48, 0.85) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(140%) !important;
+  backdrop-filter: blur(28px) saturate(140%) !important;
+  border: 1px solid rgba(80, 170, 255, 0.32) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.85), 0 0 35px -10px rgba(25, 217, 255, 0.25) !important;
+  padding: clamp(28px, 4vw, 42px) !important;
+  transform-style: preserve-3d;
+}
+
+/* 3D Floating Icon */
+.auth-3d-icon-badge {
+  position: relative;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(25, 217, 255, 0.32), rgba(23, 105, 255, 0.15));
+  border: 1px solid rgba(25, 217, 255, 0.45);
+  box-shadow: 0 0 28px -5px rgba(25, 217, 255, 0.55), inset 0 0 16px rgba(25, 217, 255, 0.3);
+  transform: translateZ(32px);
+}
+
+.auth-3d-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(25, 217, 255, 0.5);
+  animation: spinRing 18s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes spinRing {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.auth-3d-star {
+  width: 28px;
+  height: 28px;
+  color: #19D9FF;
+  filter: drop-shadow(0 0 10px rgba(25, 217, 255, 0.8));
+}
+
+/* Segmented Mode Pill Switcher */
+.auth-mode-pill {
+  display: flex;
+  align-items: center;
+  background: rgba(4, 12, 28, 0.7);
+  border: 1px solid rgba(80, 170, 255, 0.25);
+  border-radius: 999px;
+  padding: 4px;
+  margin: 0 auto 24px;
+  max-width: 290px;
+}
+
+.auth-mode-tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #C6D4E8;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.auth-mode-tab.active {
+  background: linear-gradient(135deg, #1769FF 0%, #19D9FF 100%);
+  color: #061126;
+  font-weight: 700;
+  box-shadow: 0 0 16px rgba(25, 217, 255, 0.45);
+}
+
+.auth-mode-tab:not(.active):hover {
+  color: #FFFFFF;
+  background: rgba(25, 217, 255, 0.08);
+}
+
+/* Submit button in 3D card */
+.auth-submit-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 15px 24px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+/* 4-Stage Neon Strength Bar */
+.auth-strength-box {
+  background: rgba(5, 14, 32, 0.6);
+  border: 1px solid rgba(80, 170, 255, 0.16);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: -6px;
+  margin-bottom: 4px;
+}
+
+.auth-strength-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+}
+
+.auth-strength-label {
+  color: #8E9CB2;
+  font-weight: 500;
+}
+
+.auth-strength-value {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
+}
+
+.auth-strength-meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.auth-strength-step {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+}
+
+/* Live Password Requirements Checklist */
+.auth-req-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 4px;
+}
+
+.auth-req-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: #6C7D93;
+  transition: all 0.2s ease;
+}
+
+.auth-req-icon {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+}
+
+.auth-req-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.auth-req-item.met {
+  color: #20E3A2;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(32, 227, 162, 0.4);
+}
+
+.input-match-badge {
+  position: absolute;
+  right: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.input-match-badge svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Security Foot */
+.auth-security-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #8E9CB2;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: center;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(80, 170, 255, 0.14);
+}
+
+/* Links */
+.link-cyan {
+  color: #19D9FF;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.link-cyan:hover {
+  color: #76FFD1;
+  text-shadow: 0 0 12px rgba(25, 217, 255, 0.6);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Steps Pill (in Forgot Password) */
+.auth-steps-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  margin-bottom: 22px;
+}
+
+.step-dot {
+  color: #6C7D93;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.step-dot.active {
+  color: #19D9FF;
+  background: rgba(25, 217, 255, 0.14);
+  border: 1px solid rgba(25, 217, 255, 0.35);
+  font-weight: 700;
+}
+
+.step-dot.done {
+  color: #20E3A2;
+}
+
+.step-arrow {
+  color: #4A5B73;
 }
 
