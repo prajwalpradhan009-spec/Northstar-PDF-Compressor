@@ -3838,23 +3838,68 @@ body:has(.hero) .nav-link.active {
   border: 1px solid rgba(80, 170, 255, 0.32) !important;
   border-radius: 26px !important;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.85), 0 0 35px -10px rgba(25, 217, 255, 0.25) !important;
-  padding: clamp(28px, 4vw, 42px) !important;
+  padding: clamp(20px, 3vw, 34px) !important;
   transform-style: preserve-3d;
 }
 
-/* 3D Floating Icon */
-.auth-3d-icon-badge {
+/* 3D Floating Logo Badge */
+.auth-brand-badge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  transform: translateZ(32px);
+}
+
+.auth-3d-logo-badge {
   position: relative;
-  width: 62px;
-  height: 62px;
-  margin: 0 auto 18px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, rgba(25, 217, 255, 0.32), rgba(23, 105, 255, 0.15));
+  background: radial-gradient(circle at 35% 35%, rgba(25, 217, 255, 0.35), rgba(23, 105, 255, 0.15));
   border: 1px solid rgba(25, 217, 255, 0.45);
-  box-shadow: 0 0 28px -5px rgba(25, 217, 255, 0.55), inset 0 0 16px rgba(25, 217, 255, 0.3);
-  transform: translateZ(32px);
+  box-shadow: 0 0 28px -4px rgba(25, 217, 255, 0.55), inset 0 0 16px rgba(25, 217, 255, 0.3);
+  margin-bottom: 8px;
+}
+
+.auth-logo-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(25, 217, 255, 0.6));
+}
+
+.auth-brand-name-bold {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(25, 217, 255, 0.5);
+}
+
+.auth-showcase-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.auth-showcase-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(25, 217, 255, 0.12);
+  border: 1px solid rgba(25, 217, 255, 0.3);
+  color: #19D9FF;
+  text-transform: uppercase;
 }
 
 .auth-3d-ring {
@@ -3885,9 +3930,9 @@ body:has(.hero) .nav-link.active {
   background: rgba(4, 12, 28, 0.7);
   border: 1px solid rgba(80, 170, 255, 0.25);
   border-radius: 999px;
-  padding: 4px;
-  margin: 0 auto 24px;
-  max-width: 290px;
+  padding: 3px;
+  margin: 0 auto 18px;
+  max-width: 280px;
 }
 
 .auth-mode-tab {

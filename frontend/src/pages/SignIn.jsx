@@ -29,9 +29,12 @@ export default function SignIn() {
          * ================================================================= */}
         <div className="auth-showcase">
           <Reveal>
-            <div className="eyebrow-galaxy">
-              <span>&#9699;</span>
-              <span>NORTHSTAR VAULT &bull; SECURE WORKSPACE</span>
+            <div className="auth-showcase-brand">
+              <div className="brand-logo-wrap">
+                <img className="brand-logo" src="/logo-128.png" alt="" width="36" height="36" />
+              </div>
+              <span className="brand-text">NORTHSTAR</span>
+              <span className="auth-showcase-badge">SECURE SUITE</span>
             </div>
           </Reveal>
 
@@ -39,7 +42,7 @@ export default function SignIn() {
             <h1 className="auth-hero-title">
               <span className="line-1">ACCESS YOUR</span>
               <span className="line-cyan">WORKFLOW.</span>
-              <span className="line-sub">FAST. PRIVATE. REIMAGINED.</span>
+              <span className="line-sub">FAST &bull; PRIVATE &bull; REIMAGINED</span>
             </h1>
           </Reveal>
 
@@ -127,10 +130,13 @@ export default function SignIn() {
           <Reveal delay={80}>
             <TiltCard maxTilt={8} className="auth-tilt-wrapper">
               <div className="auth-3d-card glass-panel">
-                {/* 3D Floating Icon with rotating cyber-ring */}
-                <div className="auth-3d-icon-badge" aria-hidden="true">
-                  <div className="auth-3d-ring" />
-                  <Star className="auth-3d-star" />
+                {/* 3D Floating NorthStar Logo with rotating cyber-ring */}
+                <div className="auth-brand-badge-wrap">
+                  <div className="auth-3d-logo-badge" aria-hidden="true">
+                    <div className="auth-3d-ring" />
+                    <img className="auth-logo-img" src="/logo-128.png" alt="NorthStar" width="52" height="52" />
+                  </div>
+                  <div className="auth-brand-name-bold">NORTHSTAR</div>
                 </div>
 
                 {/* Segmented Mode Switcher */}

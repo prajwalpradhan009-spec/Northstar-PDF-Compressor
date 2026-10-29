@@ -146,9 +146,12 @@ export default function ForgotPassword() {
         <Reveal>
           <TiltCard maxTilt={8} className="auth-tilt-wrapper">
             <div className="auth-3d-card glass-panel">
-              <div className="auth-3d-icon-badge" aria-hidden="true">
-                <div className="auth-3d-ring" />
-                {step === 'success' ? <CheckCircle2 className="auth-3d-star" style={{ color: '#20E3A2' }} /> : <Star className="auth-3d-star" />}
+              <div className="auth-brand-badge-wrap">
+                <div className="auth-3d-logo-badge" aria-hidden="true">
+                  <div className="auth-3d-ring" />
+                  <img className="auth-logo-img" src="/logo-128.png" alt="NorthStar" width="52" height="52" />
+                </div>
+                <div className="auth-brand-name-bold">NORTHSTAR</div>
               </div>
 
               {/* Progress Steps */}

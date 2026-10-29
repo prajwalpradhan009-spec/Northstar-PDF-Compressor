@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Reveal from '../components/Reveal';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Loader } from '../components/Loader';
-import { AlertCircle, Eye, EyeOff, Lock, Mail } from '../components/icons';
+import { AlertCircle, Eye, EyeOff, Lock, Mail, User } from '../components/icons';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -19,7 +19,7 @@ export function AuthFields({ fields, errors, onChange, showPassword, onTogglePas
           </label>
           <div className="input-wrap">
             <span className="input-icon" aria-hidden="true">
-              <Lock style={{ width: 17, height: 17 }} />
+              <User style={{ width: 17, height: 17 }} />
             </span>
             <input
               id="auth-name"
@@ -124,11 +124,18 @@ export function useAuthForm(mode) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const initialEmail = location.state?.registeredEmail || location.state?.email || '';
+  const [fields, setFields] = useState({ name: '', email: initialEmail, password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.registeredEmail) {
+      setFields((curr) => ({ ...curr, email: location.state.registeredEmail }));
+    }
+  }, [location.state?.registeredEmail]);
 
   // Where to land after a successful auth — set by the page that redirected.
   const destination = location.state?.from || (mode === 'signup' ? '/signin' : '/dashboard');
